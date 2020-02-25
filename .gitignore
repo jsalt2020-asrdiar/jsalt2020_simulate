@@ -1,0 +1,14 @@
+# Python #
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temp files #
+tmp*
+temp*
+~*
+
+# VS #
+.idea/
+.vs/
+.vscode/
