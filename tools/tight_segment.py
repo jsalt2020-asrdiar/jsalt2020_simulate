@@ -18,7 +18,6 @@ def read_wave(path):
         return pcm_data, sample_rate
 
 
-
 def write_wave(path, audio, sample_rate):
     with contextlib.closing(wave.open(path, 'wb')) as wf:
         wf.setnchannels(1)
@@ -27,13 +26,11 @@ def write_wave(path, audio, sample_rate):
         wf.writeframes(audio)
 
 
-
 class Frame(object):
     def __init__(self, bytes, timestamp, duration):
         self.bytes = bytes
         self.timestamp = timestamp
         self.duration = duration
-
 
 
 def frame_generator(frame_duration_ms, audio, sample_rate):
@@ -45,7 +42,6 @@ def frame_generator(frame_duration_ms, audio, sample_rate):
         yield Frame(audio[offset:offset + n], timestamp, duration)
         timestamp += duration
         offset += n
-
 
 
 def vad_collector(sample_rate, frame_duration_ms,
@@ -76,37 +72,38 @@ def vad_collector(sample_rate, frame_duration_ms,
                 yield b''.join([f.bytes for f in voiced_frames])
                 ring_buffer.clear()
                 voiced_frames = []
-    #if triggered:
-    #    sys.stdout.write('-(%s)' % (frame.timestamp + frame.duration))
-    #sys.stdout.write('\n')
+
     if voiced_frames:
         yield b''.join([f.bytes for f in voiced_frames])
 
  
         
 def main(args):
-    # Load the input file list. 
-    print('Loading the input file list.')
+    # Read the input file list. 
+    print('Reading the input file list.')
     with open(args.inputlist) as f:
-        files = [l.strip() for l in f.readlines()]
-    print('{} files found.'.format(len(files)))
+        files = [l.strip() for l in f.readlines() if l.strip() != '']
+    print('{} files found.'.format(len(files)), flush=True)
 
     inputdir = os.path.commonpath(files)
 
-
     # Process each file. 
-    done = 0
-    for inputfile in files:
+    for done, inputfile in enumerate(files):
+        # Print the status. 
+        if done % 100 == 0:
+            print('{}/{}... {:.3f}%'.format(done, len(files), done/len(files)*100))   
+
         outputfile_base = os.path.join(args.outputdir, os.path.relpath(os.path.splitext(inputfile)[0], start=inputdir))
         os.makedirs(os.path.dirname(outputfile_base), exist_ok=True)
 
+        # Perform VAD.
         audio, sample_rate = read_wave(inputfile)
         vad = webrtcvad.Vad(args.tightlevel)
         frames = frame_generator(30, audio, sample_rate)
         frames = list(frames)
         segments = vad_collector(sample_rate, 30, 300, vad, frames)
 
-        target_len = 0
+        # Chop the audio file.
         i = 0
         for x in segments:
             fmt = '<i{:d}'.format(2)
@@ -117,10 +114,6 @@ def main(args):
                 write_wave(outputfile, x, sample_rate)                
                 i += 1
 
-        done += 1
-        if done % 100 == 0:
-            print('{}/{}... {:.3f}%'.format(done, len(files), done/len(files)*100))
-    
 
 
 def make_argparse():
