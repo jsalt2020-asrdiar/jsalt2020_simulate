@@ -20,4 +20,6 @@ $PYTHON $deflac --srcdir $srcdir/train-clean-100 $srcdir/train-clean-360 --dstdi
 # List the original wav files. 
 $PYTHON $gen_filelist --srcdir $dstdir/wav/train-clean-100 $dstdir/wav/train-clean-360 --outlist $dstdir/filelist/train.list
 
+# Remove silence regions from the training utterances. This allows us to accurately control the overlap ratio distribution duing training. 
+$PYTHON $segment --inputlist $dstdir/filelist/train.list --outputdir $dstdir/wav_newseg
 
