@@ -8,6 +8,7 @@ PYTHON=/usr/bin/python3.8
 gen_filelist=./tools/gen_filelist.py
 list2json=./tools/list2json_librispeech.py
 mixspec=./tools/gen_mixspec_2spkr.py
+mixer=./tools/mixaudio.py
 
 # Directories
 # Takuya's set-up
@@ -18,13 +19,12 @@ tgtroot=/mnt/f/Work/JelinekWorkshop2020/data/LibriCSS-train
 # Hyper-parameters
 ncopies=1
 single_spkr=0.08
-
-
-# cfgfile=./configs/2mixReverbNoiseLibriMix.json
+rndseed=1000
+cfgfile=./configs/2mix_reverb_stanoise.json
 
 # List the source files. 
 trainlist=$tgtroot/train.list
-# $PYTHON $gen_filelist --srcdir $srcdir --outlist $trainlist
+$PYTHON $gen_filelist --srcdir $srcdir --outlist $trainlist
 
 # Create a JSON file for the source data set. 
 trainjson=$tgtroot/train.json
@@ -36,3 +36,6 @@ specjson=$tgtroot/mixspec.json
 $PYTHON $mixspec --inputfile $trainjson --outputfile $specjson --ncopies $ncopies --single_speaker_percentage $single_spkr --targetdir $tgtdir
 
 # Generate mixed audio files. 
+mixlog=$tgtroot/mixlog.json
+$PYTHON $mixer --iolist $specjson --cancel_dcoffset --random_seed $rndseed --mixers_configfile $cfgfile --sample_rate 16000  --log $mixlog
+

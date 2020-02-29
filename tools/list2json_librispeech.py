@@ -64,7 +64,6 @@ def main(args):
 
 def make_argparse():
     # Set up an argument parser. 
-    # Set up an argument parser. 
     parser = argparse.ArgumentParser(description='Create a JSON file for LibriSpeech.')
     parser.add_argument('--input_list', required=True, 
                         help='Wav file list.')
