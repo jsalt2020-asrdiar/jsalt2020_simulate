@@ -34,7 +34,9 @@ def main(args):
 
         with open(args.outlist, 'w') as outfile_stream:
             # Process each audio file.
-            for iofiles in iolist:
+            for i, iofiles in enumerate(iolist):
+                print('[{}/{} ({:.3f}%)]'.format(i+1, len(iolist), i / len(iolist)))
+
                 infiles = [os.path.abspath(f) for f in iofiles['inputs']]
                 outfile = os.path.abspath(iofiles['output'])
 
