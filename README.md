@@ -1,5 +1,7 @@
 # Introduction 
-The aim of this project is to provide a set of tools for generating training data for speech separation models. 
+The aim of this project is to provide a set of tools for generating training data for speech separation models. This data generator was used in our prior work on LibriCSS [1]. 
+
+[1] Z. Chen et al., "Continuous speech separation: dataset and analysis," ICASSP 2020 - 2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Barcelona, Spain, 2020, accepted for publication.
 
 ## Prerequisites
 The following Python packages need to be installed in advance. 
@@ -25,4 +27,4 @@ Be sure to edit the directory names in this script.
 ./scripts/run.sh
 ```
 
-A fully automated script may hopefully arrive at some point later:-)
+A fully automated script may hopefully arrive at some point later. 
