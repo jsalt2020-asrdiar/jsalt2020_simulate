@@ -9,10 +9,11 @@ set -o pipefail
 # Programs
 # Takuya's set-up
 PYTHON=/usr/bin/python3.8
-KALDI=/mnt/lustre/share/kaldi-master
+# a subset of Kaldi utils
+KALDI_UTILS=./tools/kaldi_utils
 
 # Environment
-export PATH=${KALDI}/egs/wsj/s5/utils:${PATH}
+export PATH=${KALDI_UTILS}:${PATH}
 . ./configs/cmd.sh
 
 # Scripts
@@ -42,4 +43,3 @@ split_scp.pl ${dstdir}/filelist/train.list $(for j in $(seq ${nj}); do echo ${sp
 # Remove silence regions from the training utterances. This allows us to accurately control the overlap ratio distribution duing training.
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/tight_segment.JOB.log \
     $PYTHON $segment --inputlist ${splitdir}/train.JOB.list --outputdir ${dstdir}/wav_newseg
-# $PYTHON $segment --inputlist $dstdir/filelist/train.list --outputdir $dstdir/wav_newseg

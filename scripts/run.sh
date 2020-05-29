@@ -9,10 +9,11 @@ set -o pipefail
 # Programs
 # Takuya's set-up
 PYTHON=/usr/bin/python3.8
-KALDI=/mnt/lustre/share/kaldi-master
+# a subset of Kaldi utils
+KALDI_UTILS=./tools/kaldi_utils
 
 # Environment
-export PATH=${KALDI}/egs/wsj/s5/utils:${PATH}
+export PATH=${KALDI_UTILS}:${PATH}
 . ./configs/cmd.sh
 
 # Scripts
