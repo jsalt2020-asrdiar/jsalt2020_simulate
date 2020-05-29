@@ -20,6 +20,8 @@ A simple installation method using requirements.txt will be hopefully provided l
 ```
 Be sure to edit the directory names in this script. 
 
+You may also want to modify configs/cmd.sh depending on the queueing system you are using. 
+
 3. Run the following script to generate multi-channel speech mixture files. 
 ```
 ./scripts/run.sh
