@@ -28,3 +28,13 @@ You may also want to modify configs/cmd.sh depending on the queueing system you 
 ```
 
 A fully automated script may hopefully arrive at some point later:-)
+
+
+## Plan
+
+The following is a list of things that are desired to be added. 
+- Generating "meeting-ish" signals to support the SSD work. 
+- Add pyroomacoustics as an RIR generation engine. 
+
+
+

@@ -12,3 +12,5 @@ temp*
 .idea/
 .vs/
 .vscode/
+
+path.sh
