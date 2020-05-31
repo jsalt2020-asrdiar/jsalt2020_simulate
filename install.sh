@@ -2,9 +2,10 @@
 
 if [ $# -ne 1 ]
 then
-  echo "Usage: $0 <your-data-dir>"
-  echo "e.g.: $0 /data/tayoshio/jsalt2020_simulate"
-  exit
+    CMD=`basename $0`
+    echo "Usage: $CMD <your-data-dir>"
+    echo "e.g.: $CMD /data/tayoshio/jsalt2020_simulate"
+    exit
 fi
 
 
