@@ -6,11 +6,13 @@ The following Python packages need to be installed in advance.
 - webrtcvad
 - PySoundFile
 - resampy
-- pyrirgen
-  - Linux: https://github.com/Marvin182/rir-generator
-  - Windows: https://github.com/ty274/rir-generator)
+- pyrirgen (https://github.com/Marvin182/rir-generator)
 
-A simple installation method using requirements.txt will be hopefully provided later. 
+You may use the provided conda environmentl file, environment.yml, to create an environment with all these packages installed. 
+```
+conda env create -f environment.yml
+```
+This will create a conda environment named *jsalt2020_simulate*. 
 
 ## Steps
 1. Download train-clean-100.tar.gz and train-clean360.tar.gz of LibriSpeech from http://www.openslr.org/12/, untar them, and put the generated directories, train-clean-100 and train-clean-360, under a single directory. 

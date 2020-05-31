@@ -7,8 +7,7 @@ set -u
 set -o pipefail
 
 # Programs
-# Takuya's set-up
-PYTHON=/usr/bin/python3.8
+PYTHON=python
 # a subset of Kaldi utils
 KALDI_UTILS=./tools/kaldi_utils
 
@@ -22,12 +21,12 @@ gen_filelist=./tools/gen_filelist.py
 segment=./tools/tight_segment.py
 
 # Hyper-parameters
-nj=32       # number of splits for parallel processing
+nj=16       # number of splits for parallel processing
 
 # Directories
 # Takuya's set-up
-srcdir=/mnt/f/DB/LibriSpeech/train  # Has to contain train-clean100 and train-clean-360 from which FLAC files are retrieved. 
-dstdir=/mnt/f/Work/JelinekWorkshop2020/data/train
+srcdir=/data/tayoshio/jsalt2020_simulate/data-orig/LibriSpeech  # Has to contain train-clean100 and train-clean-360 from which FLAC files are retrieved. 
+dstdir=/data/tayoshio/jsalt2020_simulate/data/train
 splitdir=$dstdir/filelist/split${nj}
 mkdir -p ${splitdir}/log
 
