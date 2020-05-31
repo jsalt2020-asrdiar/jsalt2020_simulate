@@ -13,4 +13,6 @@ temp*
 .vs/
 .vscode/
 
+# Artifacts #
 path.sh
+external_tools/
