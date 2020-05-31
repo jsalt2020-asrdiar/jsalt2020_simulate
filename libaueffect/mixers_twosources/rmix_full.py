@@ -50,8 +50,11 @@ class ReverbMixFullNoise(object):
 
     def __call__(self, inputs, samplerate, output_filename, input_filenames, save_rir=False, save_anechoic=False):
         print(output_filename)
-        for f in input_filenames:
-            print('\t+ {}'.format(f))
+        for i, f in enumerate(input_filenames):
+            if i == 0:
+                print('\t= {}'.format(f))
+            else:
+                print('\t+ {}'.format(f))
 
         if len(inputs) == 0:
             sir = float('inf')
