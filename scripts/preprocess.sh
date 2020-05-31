@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Set bash to 'debug' mode, it will exit on :
+# -e 'error', -u 'undefined variable', -o ... 'error in pipeline', -x 'print commands',
+set -e
+set -u
+set -o pipefail
+
 # Set the number of splits for parallel processing. 
 nj=16
 if [ $# -ge 3 ] || [ $# -eq 1 ]; then
@@ -30,12 +36,6 @@ fi
 ROOTDIR=`dirname $0`/..
 ROOTDIR=`realpath $ROOTDIR`
 source $ROOTDIR/path.sh
-
-# Set bash to 'debug' mode, it will exit on :
-# -e 'error', -u 'undefined variable', -o ... 'error in pipeline', -x 'print commands',
-set -e
-set -u
-set -o pipefail
 
 PYTHON=python
 

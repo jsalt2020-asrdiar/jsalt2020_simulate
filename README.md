@@ -40,21 +40,12 @@ source ./path.sh  # This is created by install.sh.
 
 [1] Z. Chen, T. Yoshioka, L. Lu, T. Zhou, Z. Meng, Y. Luo, J. Wu, X. Xiao, J. Li, "Continuous Speech Separation: Dataset and Analysis," ICASSP 2020 - 2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Barcelona, Spain, 2020, pp. 7284-7288, doi: 10.1109/ICASSP40776.2020.9053426.
 
-The following recipe generates the separation model training data used in [1]. 
-
-1. Preprocess the orignal files (i.e., convert to WAV and remove silence). 
-    ```
-    ./scripts/preprocess.sh
-    ```
-    Be sure to edit the directory names in this script. 
-
-    You may also want to modify configs/cmd.sh depending on the queueing system you are using. 
-
-2. Run the following script to generate multi-channel speech mixture files. 
-    ```
-    ./scripts/run.sh
-    ```
-
+The separation model training data used in [1] can be generated as follows. 
+You may want to modify configs/cmd.sh, depending on the queueing system you're using. 
+```
+./scripts/preprocess.sh  # Convert FLAC to WAV; remove silence. 
+./scripts/run.sh  # Do simulation. 
+```
 
 
 ## Plan
