@@ -6,28 +6,54 @@ set -e
 set -u
 set -o pipefail
 
-# Programs
-# Takuya's set-up
-PYTHON=/usr/bin/python3.8
+# Set the number of splits for parallel processing. 
+nj=16
+if [ $# -ge 3 ] || [ $# -eq 1 ]; then
+    CMD=`basename $0`
+    echo "Usage: $CMD [--split] <#nsubsets>"
+    echo "  e.g.: $CMD --split 16"
+    echo "  By default, the split value is set to 16."
+    exit 1
+fi
+if [ $# -eq 2 ]; then
+    if [ "$1" == --split ]; then
+        nj=$2
+    else
+        CMD=`basename $0`
+        echo "Usage: $CMD [--split] <#nsubsets>"
+        echo "e.g.: $CMD --split 16"
+        echo "By default, the split value is set to 16."
+        exit 1
+    fi
+fi
+
+if ! which realpath >/dev/null; then
+    echo "realpath is not installed."
+    exit 1
+fi
+
+# Import $EXPROOT. 
+ROOTDIR=`dirname $0`/..
+ROOTDIR=`realpath $ROOTDIR`
+source $ROOTDIR/path.sh
+
+PYTHON=python
+
 # a subset of Kaldi utils
-KALDI_UTILS=./tools/kaldi_utils
+KALDI_UTILS=$ROOTDIR/tools/kaldi_utils
 
 # Environment
 export PATH=${KALDI_UTILS}:${PATH}
-. ./configs/cmd.sh
+. $ROOTDIR/configs/cmd.sh
 
 # Scripts
-deflac=./tools/deflac.py
-gen_filelist=./tools/gen_filelist.py
-segment=./tools/tight_segment.py
-
-# Hyper-parameters
-nj=32       # number of splits for parallel processing
+deflac=$ROOTDIR/tools/deflac.py
+gen_filelist=$ROOTDIR/tools/gen_filelist.py
+segment=$ROOTDIR/tools/tight_segment.py
 
 # Directories
-# Takuya's set-up
-srcdir=/mnt/f/DB/LibriSpeech/train  # Has to contain train-clean100 and train-clean-360 from which FLAC files are retrieved. 
-dstdir=/mnt/f/Work/JelinekWorkshop2020/data/train
+srcdir=$EXPROOT/data-orig/LibriSpeech  # Has to contain train-clean100 and train-clean-360 from which FLAC files are retrieved. 
+dstdir=$EXPROOT/data/train
 splitdir=$dstdir/filelist/split${nj}
 mkdir -p ${splitdir}/log
 
