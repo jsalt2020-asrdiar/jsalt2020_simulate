@@ -47,11 +47,21 @@ You may want to modify configs/cmd.sh, depending on the queueing system you're u
 ./scripts/run.sh  # Do simulation. 
 ```
 
+### 2. Meeting-style audio simulation
+
+The following will generate a set of meeting-style audio files, each consisting of three speakers each with three utterances. There are some sessions that have fewer speakers because the number of utterances per speaker is not uniform in the LibriSpeech training set. 
+```
+./scripts/preprocess.sh  # Convert FLAC to WAV; remove silence. 
+./scripts/run_meetings.sh  # Do simulation. 
+```
+
 
 ## Plan
 
 The following is a list of things that are desired to be added. 
-- Generating "meeting-ish" signals to support the SSE work. 
+- Improve the meeting-style audio simulation tool. 
+  - Add reverberation and noise. 
+  - Set the target length of each session?
 - Add pyroomacoustics as an RIR generation engine. 
 
 
