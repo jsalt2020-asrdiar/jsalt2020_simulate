@@ -104,7 +104,7 @@ def give_timing(sess_list, overlap_time_ratio=0.3):
         offset = 0
         for utt, ot in zip(time_marked_sess, overlap_times):
             offset -= ot
-            utt['offset'] = offset            
+            utt['offset'] = max(offset, 0.0)
             offset += utt['length_in_seconds']
 
         ret.append(time_marked_sess)
@@ -137,7 +137,7 @@ def main(args):
     ptrn = f'[:0{ndigits}d].wav'.replace('[', '{').replace(']', '}')
     for i, sess in enumerate(sess_list):
         sess_out = os.path.join(args.targetdir, ptrn.format(i))
-        dic = {'input': sess, 
+        dic = {'inputs': sess, 
                'output': sess_out}
         output.append(dic)
 
