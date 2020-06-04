@@ -96,6 +96,8 @@ def gen_pairs(orig_corpus, targetdir, single_speaker_percentage, appendix=''):
 
 
 def main(args):
+    random.seed(0)
+
     # Get the input files.
     with open(args.inputfile) as f:
         corpus = json.load(f)
