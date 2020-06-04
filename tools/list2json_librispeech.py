@@ -15,7 +15,10 @@ def main(args):
         for l in input_strm:
             nlines += 1
 
-    spkr_ptrn = re.compile('(\d+)-\d+-\d+_\d\.wav')
+    if args.novad:
+        spkr_ptrn = re.compile('(\d+)-\d+-\d+\.wav')
+    else:
+        spkr_ptrn = re.compile('(\d+)-\d+-\d+_\d\.wav')
 
     # 103-1240-0000_1
 
@@ -69,6 +72,8 @@ def make_argparse():
                         help='Wav file list.')
     parser.add_argument('--output_file', required=True,
                         help='Output JSON file name.')
+    parser.add_argument('--novad', action='store_true', 
+                        help='File name pattern for the no-VAD (i.e., the original LibriSpeech) data.')
                         
     return parser
     
