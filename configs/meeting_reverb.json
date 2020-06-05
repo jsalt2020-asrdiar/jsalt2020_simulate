@@ -17,7 +17,7 @@
         "spkr_mic_dist_range_x": [ 0.5, 4 ],
         "spkr_mic_dist_range_y": [ 0.5, 4 ],
         "spkr_mic_dist_range_z": [ 0.1, 1.0 ],
-        "t60_range": [ 0.15, 0.5 ],
+        "t60_range": [ 0.15, 0.3 ],
         "min_angle_diff": 5, 
         "micarray": "circular7"
       }
