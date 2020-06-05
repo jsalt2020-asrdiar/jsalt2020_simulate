@@ -58,11 +58,11 @@ The following will generate a set of meeting-style audio files, each consisting 
 
 ## Plan
 
-The following is a list of things that are desired to be added. 
-- Improve the meeting-style audio simulation tool. 
-  - Add reverberation and noise. 
-  - Set the target length of each session?
-- Add pyroomacoustics as an RIR generation engine. 
+- Add documentation. 
+- Expose some control parameters. 
+- Add other RIR generation engines. 
+  - pyroomacoustics
+  - Google's TF-based tool.
 
 
 
