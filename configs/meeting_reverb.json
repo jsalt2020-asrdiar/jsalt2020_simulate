@@ -1,0 +1,49 @@
+{
+  "probabilities": [ 1.0 ],
+
+  "generators": [
+    {
+      "id": "room_simulator1",
+      "generator": "libaueffect.room_simulators.RandomRirGenerator",
+      "opts": {
+        "sound_velocity": 340,
+        "fs": 16000,
+        "roomdim_range_x": [ 5, 12 ],
+        "roomdim_range_y": [ 5, 12 ],
+        "roomdim_range_z": [ 2.5, 4.5 ],
+        "roomcenter_mic_dist_max_x": 2.0,
+        "roomcenter_mic_dist_max_y": 2.0,
+        "micpos_range_z": [ 0.4, 1.2 ],
+        "spkr_mic_dist_range_x": [ 0.5, 4 ],
+        "spkr_mic_dist_range_y": [ 0.5, 4 ],
+        "spkr_mic_dist_range_z": [ 0.1, 1.0 ],
+        "t60_range": [ 0.15, 0.3 ],
+        "min_angle_diff": 5, 
+        "micarray": "circular7"
+      }
+    },
+    {
+      "id": "noise_generator1",
+      "generator": "libaueffect.noise_generators.SphericalNoiseGenerator",
+      "opts": {
+        "sound_velocity": 340,
+        "fs": 16000,
+        "micarray": "circular7",
+        "spectral_shape": "hoth"
+      }
+    }
+  ],
+
+  "mixers": [
+    {
+      "mixer": "libaueffect.mixers_meeting.ReverbMixMeeting",
+      "opts": {
+        "gain_range": [-5, 5], 
+        "max_snr": 20.0,
+        "min_snr": 10.0,
+        "room_simulator": "id=room_simulator1",
+        "noise_generator": "id=noise_generator1"
+      }
+    }
+  ]
+}

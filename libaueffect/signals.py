@@ -22,6 +22,19 @@ def load_random_rirs(rirfiles, nspeakers=2, sample_rate=16000):
     return h
 
 
+def remove_delay_from_rirs(h):
+    delay = sys.maxsize
+
+    for i in range(len(h)):
+        for j in range(len(h[i])):
+            h_env = np.absolute(scipy.signal.hilbert(h[i][j]))
+            if delay > np.argmax(h_env):
+                delay = np.argmax(h_env)
+    for i in range(len(h)):
+        h[i] = h[i][:, delay:]
+
+    return h
+
 
 def reverb_mix(x, rirfiles, amp=1.0, sample_rate=16000, cancel_delay=False, second_arg_is_filename=True):
     if second_arg_is_filename:
@@ -32,16 +45,7 @@ def reverb_mix(x, rirfiles, amp=1.0, sample_rate=16000, cancel_delay=False, seco
     nchans = h[0].shape[0]
         
     # Compensate for the delay.
-    delay = sys.maxsize
-    if cancel_delay:
-        for i in range(len(h)):
-            for j in range(len(h[i])):
-                h_env = np.absolute(scipy.signal.hilbert(h[i][j]))
-                if delay > np.argmax(h_env):
-                    delay = np.argmax(h_env)
-        for i in range(len(h)):
-            h[i] = h[i][:, delay:]
-
+    h = remove_delay_from_rirs(h)
 
     # Filter the source signals. 
     nsrcs = x.shape[0]

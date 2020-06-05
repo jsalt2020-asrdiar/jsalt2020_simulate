@@ -1,0 +1,15 @@
+{
+  "probabilities": [ 1.0 ],
+
+  "generators": [
+  ], 
+
+  "mixers": [
+    {
+      "mixer": "libaueffect.mixers_meeting.CleanMixMeeting",
+      "opts": {
+        "gain_range": [-5, 5]
+      }
+    }
+  ]
+}
