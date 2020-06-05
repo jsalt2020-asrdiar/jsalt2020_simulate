@@ -20,9 +20,9 @@ def main(args):
     with open(args.iolist) as f:
         iolist = json.load(f)
 
-    # # Instatiate the mixers.    
-    # mixers, priors = mixer_array = libaueffect.create_AudioMixerArray(args.mixers_configfile) 
-    # nmixers = len(mixers)
+    # Instatiate the mixers.    
+    mixers, priors = mixer_array = libaueffect.create_AudioMixerArray(args.mixers_configfile) 
+    nmixers = len(mixers)
 
     # Create the output directories.
     os.makedirs(os.path.dirname(os.path.abspath(args.outlist)), exist_ok=True)
@@ -39,6 +39,7 @@ def main(args):
 
                 infiles = [os.path.abspath(f['path']) for f in iofiles['inputs']]
                 offsets = [int(args.sample_rate * f['offset']) for f in iofiles['inputs']]
+                spkr_labs = [f['speaker_id'] for f in iofiles['inputs']]
                 outfile = os.path.abspath(iofiles['output'])
 
                 # Load each input signal.
@@ -56,13 +57,8 @@ def main(args):
                 sr = args.sample_rate
 
                 # Mix the signals. 
-                # mixer = mixers[np.random.choice(nmixers, p=priors)]
-                # y, p = mixer(x, sr, output_filename=outfile, input_filenames=infiles, save_anechoic=args.save_anechoic, save_rir=args.save_rir)               
-
-                ylen = np.amax([len(dt) + offset for dt, offset in zip(x, offsets)])
-                y = np.zeros(ylen)
-                for dt, offset in zip(x, offsets):
-                    y[offset : offset + len(dt)] += dt
+                mixer = mixers[np.random.choice(nmixers, p=priors)]
+                y, p = mixer(x, offsets, spkr_labs)
 
                 print(os.path.abspath(outfile), file=outfile_stream)
                 libaueffect.write_wav(y, outfile, sample_rate=sr, avoid_clipping=False)
@@ -71,7 +67,7 @@ def main(args):
                                'speaker_id': f['speaker_id'], 
                                'offset': f['offset'], 
                                'length_in_seconds': f['length_in_seconds']} for f in iofiles['inputs']]
-                params = OrderedDict([('output', outfile), ('inputs', input_info)])
+                params = OrderedDict([('output', outfile), ('inputs', input_info)] + list(p.items()))
                 json.dump(params, log_stream, indent=4)
 
                 # Print the list element separator. 
@@ -120,13 +116,9 @@ def make_argparse():
     proc_args.add_argument('--cancel_dcoffset', action='store_true',
                            help='Unbias the DC offset.')
 
-    # mix_args = parser.add_argument_group('Mixer options')
-    # mix_args.add_argument('--mixers_configfile', metavar='FILE', 
-    #                       help='Config file for building an array of mixers.')
-    # mix_args.add_argument('--save_anechoic', action='store_true', 
-    #                       help='Save both anechoic and reverberated source signals.')
-    # mix_args.add_argument('--save_rir', action='store_true', 
-    #                       help='Save room impulse responses.')
+    mix_args = parser.add_argument_group('Mixer options')
+    mix_args.add_argument('--mixers_configfile', metavar='FILE', 
+                          help='Config file for building an array of mixers.')
 
     return parser
 

@@ -7,7 +7,7 @@ set -u
 set -o pipefail
 
 # Set the number of splits for parallel processing. 
-nj=16
+nj=32
 if [ $# -ge 3 ] || [ $# -eq 1 ]; then
     CMD=`basename $0`
     echo "Usage: $CMD [--split] <#nsubsets>"
@@ -62,6 +62,7 @@ tgtroot=$EXPROOT/data/LibriCSS-train-meetings
 overlap_time_ratio=0.3
 utterances_per_speaker=3
 speakers_per_session=3
+cfgfile=$ROOTDIR/configs/meeting_reverb.json
 
 # List the source files. 
 trainlist=$tgtroot/train.list
@@ -90,5 +91,5 @@ $PYTHON $splitjson --inputfile $specjson --number_splits $nj --outputdir $splitd
 # Generate mixed audio files. 
 mixlog=$tgtroot/mixlog.json
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
-    $PYTHON $mixer --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json
+    $PYTHON $mixer --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json --mixers_configfile $cfgfile
 $PYTHON $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/mixlog.${j}.json; done) > $mixlog
