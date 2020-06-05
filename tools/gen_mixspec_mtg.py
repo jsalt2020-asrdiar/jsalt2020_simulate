@@ -3,6 +3,7 @@
 import argparse, os, json, random, copy
 from collections import defaultdict
 import numpy as np
+from scipy.stats import bernoulli
 
 
 
@@ -78,7 +79,7 @@ def gen_session(corpus_spkrwise, tgtdir, nspkrs_per_session, nutts_per_spkr):
 
 
 
-def give_timing(sess_list, overlap_time_ratio=0.3):
+def give_timing(sess_list, overlap_time_ratio=0.3, sil_prob=0.2, sil_dur=[0.3, 2.0]):
     ret = []
 
     for sess in sess_list:
@@ -88,24 +89,44 @@ def give_timing(sess_list, overlap_time_ratio=0.3):
         total_len = np.sum(np.array([utt['length_in_seconds'] for utt in time_marked_sess]))
         total_overlap_time = total_len * overlap_time_ratio / (1 + overlap_time_ratio)
 
-        # Distribute the budget to each utterance boundary with the "stick breaking" approach. 
+        # Determine where to do overlap. 
         nutts = len(time_marked_sess)
+        to_overlap = bernoulli.rvs(1 - sil_prob, size=nutts - 1).astype(bool).tolist()
+        noverlaps = sum(to_overlap)
+
+        # Distribute the budget to each utterance boundary with the "stick breaking" approach. 
         probs = []
         rem = 1
-        for i in range(nutts - 2):
+        for i in range(noverlaps - 1):
             p = random.betavariate(1, 5)
             probs.append(rem * p)
             rem *= (1 - p)
         probs.append(rem)
         random.shuffle(probs)
-        probs.insert(0, 0)
-        overlap_times = total_overlap_time * np.array(probs)
 
+        idx = -1
+        overlap_times = [0.0]
+        for b in to_overlap:
+            if b:
+                idx += 1
+                overlap_times.append(probs[idx] * total_overlap_time)
+            else:
+                overlap_times.append(-np.random.uniform(low=sil_dur[0], high=sil_dur[1]))
+
+        # Get all speakers. 
+        speakers = set(utt['speaker_id'] for utt in time_marked_sess)        
+
+        # Determine the offset values while ensuring that there is no overlap between multiple utterances spoken by the same person. 
         offset = 0
+        last_utt_end = {spkr: 0.0 for spkr in speakers}
         for utt, ot in zip(time_marked_sess, overlap_times):
+            spkr = utt['speaker_id']
+            ot = min(ot, offset - last_utt_end[spkr])
             offset -= ot
-            utt['offset'] = max(offset, 0.0)
+            utt['offset'] = offset
             offset += utt['length_in_seconds']
+
+            last_utt_end[spkr] = offset
 
         ret.append(time_marked_sess)
 
@@ -125,20 +146,25 @@ def main(args):
     for utt in corpus:
         corpus_spkrwise[utt['speaker_id']].append(utt)
 
-    # Generate session specs. 
+    # Group uterances to form sessions. 
     sess_list = gen_session(corpus_spkrwise, args.targetdir, args.speakers, args.utterances_per_speaker)
 
-    # Give start times to each utterance. 
-    sess_list = give_timing(sess_list, overlap_time_ratio=args.overlap_time_ratio)
+    # For each session, give a start time (i.e., offset) to each utterance. 
+    sess_list = give_timing(sess_list, 
+                            overlap_time_ratio=args.overlap_time_ratio, 
+                            sil_prob=args.silence_probability, 
+                            sil_dur=args.silence_duration)
 
     # Give an output file name to each session. 
     output = []
     ndigits = len(str(len(sess_list)))
     ptrn = f'[:0{ndigits}d].wav'.replace('[', '{').replace(']', '}')
     for i, sess in enumerate(sess_list):
+        speakers = list( set( [utt['speaker_id'] for utt in sess] ) )
         sess_out = os.path.join(args.targetdir, ptrn.format(i))
         dic = {'inputs': sess, 
-               'output': sess_out}
+               'output': sess_out, 
+               'speakers': speakers}
         output.append(dic)
 
     # Generate the output JSON file. 
@@ -152,19 +178,28 @@ def main(args):
 
 def make_argparse():
     # Set up an argument parser.
-    parser = argparse.ArgumentParser(description='Create a JSON file for meeting-ish audio simulation.')
-    parser.add_argument('--inputfile', metavar='<file>', required=True,
-                        help='Input corpus file in JSON.')
-    parser.add_argument('--outputfile', metavar='<file>', required=True,
-                        help='Output mixing file in JSON.')
-    parser.add_argument('--targetdir', metavar='<dir>', required=True,
-                        help='Target directory name.')
-    parser.add_argument('--speakers', type=int, metavar='<int>', default=3, 
-                        help='Number of speakers per session.')
-    parser.add_argument('--utterances_per_speaker', type=int, metavar='<int>', default=3, 
-                        help='Number of utterances per session/speaker.')
-    parser.add_argument('--overlap_time_ratio', type=float, metavar='<float>', default=0.2, 
-                        help='Target overlap time ratio as defined as overlap-time/session-time.')
+    parser = argparse.ArgumentParser(description='Create a JSON file for meeting-ish audio simulation.', 
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    io_args = parser.add_argument_group('IO options')
+    io_args.add_argument('--inputfile', metavar='<file>', required=True,
+                         help='Input corpus file in JSON.')
+    io_args.add_argument('--outputfile', metavar='<file>', required=True,
+                         help='Output mixing file in JSON.')
+    io_args.add_argument('--targetdir', metavar='<dir>', required=True,
+                         help='Target directory name.')
+
+    sim_args = parser.add_argument_group('Simulation options')
+    sim_args.add_argument('--speakers', type=int, metavar='<int>', default=3, 
+                          help='Number of speakers per session.')
+    sim_args.add_argument('--utterances_per_speaker', type=int, metavar='<int>', default=3, 
+                          help='Number of utterances per session/speaker.')
+    sim_args.add_argument('--overlap_time_ratio', type=float, metavar='<float>', default=0.2, 
+                          help='Target overlap time ratio as defined as overlap-time/session-time.')
+    sim_args.add_argument('--silence_probability', type=float, metavar='<float>', default=0.2, 
+                          help='Probability with which silence happens between neighboring utterances.')
+    sim_args.add_argument('--silence_duration', nargs=2, type=float, metavar=('<min-sil>', '<max-sil>'), default=[0.3, 2.0], 
+                          help='Duration of inter-utterance silence.')
 
     return parser
 
