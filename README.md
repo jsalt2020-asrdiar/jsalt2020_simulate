@@ -21,7 +21,7 @@ source ./path.sh  # This is created by install.sh.
     - webrtcvad
     - PySoundFile
     - resampy
-    - pyrirgen (https://github.com/Marvin182/rir-generator)
+    - [pyrirgen](https://github.com/Marvin182/rir-generator)
 
 2. Create path.sh with the following line. 
     ```
@@ -58,11 +58,4 @@ The following will generate a set of meeting-style audio files, each consisting 
 
 ## Plan
 
-- Add documentation. 
-- Expose some control parameters. 
-- Add other RIR generation engines. 
-  - pyroomacoustics
-  - Google's TF-based tool.
-
-
-
+See [TODO.md](TODO.md). 
