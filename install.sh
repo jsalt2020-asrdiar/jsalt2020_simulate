@@ -5,7 +5,7 @@ then
     CMD=`basename $0`
     echo "Usage: $CMD <your-data-dir>"
     echo "e.g.: $CMD /data/tayoshio/jsalt2020_simulate"
-    exit
+    exit 1
 fi
 
 
@@ -20,6 +20,18 @@ if ! which git >/dev/null; then
     exit 1
 fi
 
+
+# Check if the directory exists. 
+if [ -d $1 ]; then
+    read -p "$1 already exists. OK to overwrite it? " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        exit 1
+    fi
+else
+    /bin/mkdir -p $1
+fi
 
 
 ROOTDIR=`dirname $0`
