@@ -41,8 +41,6 @@ The scripts under *scripts* directory print usage messages with *--help* option.
 
 ### 1. Multi-channel speech separation model training
 
-[1] Z. Chen, T. Yoshioka, L. Lu, T. Zhou, Z. Meng, Y. Luo, J. Wu, X. Xiao, J. Li, "Continuous Speech Separation: Dataset and Analysis," ICASSP 2020 - 2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Barcelona, Spain, 2020, pp. 7284-7288, doi: 10.1109/ICASSP40776.2020.9053426.
-
 The separation model training data used in [1] can be generated as follows. 
 You may want to modify configs/cmd.sh, depending on the queueing system you're using. 
 ```
@@ -66,3 +64,8 @@ Use *--vad* option if you want to use VAD-segmented signals for the simulation. 
 ## Plan
 
 See [TODO.md](TODO.md). 
+
+
+## References
+
+[1] Z. Chen, T. Yoshioka, L. Lu, T. Zhou, Z. Meng, Y. Luo, J. Wu, X. Xiao, J. Li, "Continuous Speech Separation: Dataset and Analysis," ICASSP 2020 - 2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Barcelona, Spain, 2020, pp. 7284-7288, doi: 10.1109/ICASSP40776.2020.9053426.
