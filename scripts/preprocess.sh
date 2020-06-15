@@ -6,40 +6,62 @@ set -e
 set -u
 set -o pipefail
 
-# Set the number of splits for parallel processing. 
-nj=16
-if [ $# -ge 3 ] || [ $# -eq 1 ]; then
-    CMD=`basename $0`
-    echo "Usage: $CMD [--split] <#nsubsets>"
-    echo "  e.g.: $CMD --split 16"
-    echo "  By default, the split value is set to 16."
+
+function print_usage_and_exit {
+    CMD=`basename $0`    
+    echo ""
+    echo "    ''"
+    echo "    < $CMD >"
+    echo ""
+    echo "    Usage: $CMD [--split N] [--help]"
+    echo ""
+    echo "    Description: Preprocess the original LibriSpeech data."
+    echo ""
+    echo "    Options: "
+    echo "        --split N: Split the data set into N subsets for parallel processing. N defaults to 16."
+    echo "        --help: Show this message."
+    echo "    ''"
+    echo ""
     exit 1
-fi
-if [ $# -eq 2 ]; then
-    if [ "$1" == --split ]; then
-        nj=$2
+}
+
+
+nj=16  # default parallel jobs
+
+while [ $# -ge 1 ]
+do
+    if [ "${1:0:2}" != -- ]; then
+        echo ""
+        echo "ERROR: Invalid command line arguments."
+        echo ""
+        print_usage_and_exit
+    elif [ "$1" == --help ] ; then
+        print_usage_and_exit
+    elif [ "$1" == --split ]; then
+        shift
+        nj=$1
+        shift
     else
-        CMD=`basename $0`
-        echo "Usage: $CMD [--split] <#nsubsets>"
-        echo "e.g.: $CMD --split 16"
-        echo "By default, the split value is set to 16."
-        exit 1
+        echo ""
+        echo "ERROR: Invalid option $1."
+        echo ""
+        print_usage_and_exit
     fi
-fi
+done
 
 if ! which realpath >/dev/null; then
     echo "realpath is not installed."
     exit 1
 fi
 
+
+
 # Import $EXPROOT. 
 ROOTDIR=`dirname $0`/..
 ROOTDIR=`realpath $ROOTDIR`
 source $ROOTDIR/path.sh
 
-PYTHON=python
-
-# a subset of Kaldi utils
+# Subset of Kaldi utils
 KALDI_UTILS=$ROOTDIR/tools/kaldi_utils
 
 # Environment
@@ -51,21 +73,47 @@ deflac=$ROOTDIR/tools/deflac.py
 gen_filelist=$ROOTDIR/tools/gen_filelist.py
 segment=$ROOTDIR/tools/tight_segment.py
 
-# Directories
+
 srcdir=$EXPROOT/data-orig/LibriSpeech  # Has to contain train-clean100 and train-clean-360 from which FLAC files are retrieved. 
-dstdir=$EXPROOT/data/train
-splitdir=$dstdir/filelist/split${nj}
-mkdir -p ${splitdir}/log
 
-# Convert FLAC files to WAV.
-$PYTHON $deflac --srcdir $srcdir/train-clean-100 $srcdir/train-clean-360 --dstdir $dstdir/wav
+for set in train dev test 
+do 
+    dstdir=$EXPROOT/data/$set
 
-# List the original wav files.
-$PYTHON $gen_filelist --srcdir $dstdir/wav/train-clean-100 $dstdir/wav/train-clean-360 --outlist $dstdir/filelist/train.list
+    # Check if the output directory already exists. 
+    if [ -d $dstdir ]; then
+        echo 
+        read -p "$dstdir already exists. OK to overwrite?" -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            continue
+        else
+            /bin/rm -f -r $dstdir
+        fi        
+    fi
 
-# Split trainlist for parallel processing
-split_scp.pl ${dstdir}/filelist/train.list $(for j in $(seq ${nj}); do echo ${splitdir}/train.${j}.list; done)
+    splitdir=$dstdir/filelist/split${nj}
+    mkdir -p ${splitdir}/log
 
-# Remove silence regions from the training utterances. This allows us to accurately control the overlap ratio distribution duing training.
-${gen_cmd} JOB=1:${nj} ${splitdir}/log/tight_segment.JOB.log \
-    $PYTHON $segment --inputlist ${splitdir}/train.JOB.list --outputdir ${dstdir}/wav_newseg
+    # Convert FLAC files to WAV.
+    if [ "$set" == train ]; then
+        python $deflac --srcdir $srcdir/train-clean-100 $srcdir/train-clean-360 --dstdir $dstdir/wav
+    else
+        python $deflac --srcdir $srcdir/${set}-clean --dstdir $dstdir/wav
+    fi
+
+    # List the original wav files.
+    if [ "$set" == train ]; then
+        python $gen_filelist --srcdir $dstdir/wav/train-clean-100 $dstdir/wav/train-clean-360 --outlist $dstdir/filelist/${set}.list
+    else
+        python $gen_filelist --srcdir $dstdir/wav/${set}-clean --outlist $dstdir/filelist/${set}.list
+    fi        
+
+    # Split trainlist for parallel processing
+    split_scp.pl ${dstdir}/filelist/${set}.list $(for j in $(seq ${nj}); do echo ${splitdir}/${set}.${j}.list; done)
+
+    # Remove silence regions. This allows us to accurately control the overlap ratio distribution duing training.
+    ${gen_cmd} JOB=1:${nj} ${splitdir}/log/tight_segment.JOB.log \
+        python $segment --inputlist ${splitdir}/${set}.JOB.list --outputdir ${dstdir}/wav_newseg
+done
+
