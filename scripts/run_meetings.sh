@@ -22,9 +22,13 @@ function print_usage_and_exit {
     echo "        set: {train|dev|eval}, subset to process."
     echo ""
     echo "    Options: "
-    echo "        --split N: Split the data set into N subsets for parallel processing. N defaults to 16."    
-    echo "        --vad: Use VAD-segmented signals."
-    echo "        --help: Show this message."
+    echo "        --split N: Split the data set into N subsets for parallel processing. N defaults to 32."    
+    echo "        --cfg FILE  : Room acoustics configuration file. FILE defaults to <repo-root>/configs/meeting_reverb.json."
+    echo "        --overlap X : Overlap time ratio, which defaults to 0.3."
+    echo "        --utt-per-spkr N : Number of utterances per speaker in each session, which defaults to 3."
+    echo "        --spkr-per-sess N : Number of speakers per session, which defaults to 3."
+    echo "        --vad       : Use VAD-segmented signals."
+    echo "        --help      : Show this message."
     echo "    ''"
     echo ""
     exit 1
@@ -48,6 +52,22 @@ do
 
     if [ "$1" == --help ] ; then
         print_usage_and_exit
+    elif [ "$1" == --cfg ]; then
+        shift
+        cfgfile=$1
+        shift
+    elif [ "$1" == --overlap ]; then
+        shift
+        overlap_time_ratio=$1
+        shift
+    elif [ "$1" == --utt-per-spkr ]; then
+        shift
+        utterances_per_speaker=$1
+        shift
+    elif [ "$1" == --spkr-per-sess ]; then
+        shift
+        speakers_per_session=$1
+        shift
     elif [ "$1" == --vad ]; then
         vad=
         shift
@@ -62,6 +82,7 @@ do
         print_usage_and_exit
     fi
 done
+
 
 if [ $# -ne 2 ]; then
     echo ""
@@ -106,10 +127,18 @@ fi
 tgtroot=$EXPROOT/data/$1
 
 # Hyper-parameters
-overlap_time_ratio=0.3
-utterances_per_speaker=3
-speakers_per_session=3
-cfgfile=$ROOTDIR/configs/meeting_reverb.json
+if [ ! -v overlap_time_ratio ]; then
+    overlap_time_ratio=0.3
+fi
+if [ ! -v utterances_per_speaker ]; then
+    utterances_per_speaker=3
+fi
+if [ ! -v speakers_per_session ]; then
+    speakers_per_session=3
+fi
+if [ ! -v cfgfile ]; then
+    cfgfile=$ROOTDIR/configs/meeting_reverb.json
+fi
 
 # List the source files. 
 datalist=$tgtroot/${set}.list
