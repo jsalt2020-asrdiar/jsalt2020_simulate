@@ -36,30 +36,7 @@ source ./path.sh  # This is created by install.sh.
 
 ## Examples
 
-The scripts under *scripts* directory print usage messages with *--help* option. They also have *--split* option to control the degree of parallelism.
-
-
-### 1. Multi-channel speech separation model training
-
-The separation model training data used in [1] can be generated as follows. 
-You may want to modify configs/cmd.sh, depending on the queueing system you're using. 
-```
-./scripts/preprocess.sh  # Convert FLAC to WAV; remove silence. 
-./scripts/run.sh  # Do simulation. 
-```
-
-### 2. Meeting-style audio simulation
-
-The following will generate a set of meeting-style audio files, each consisting of three speakers each with three utterances. There are some sessions that have fewer speakers because the number of utterances per speaker is not uniform in the LibriSpeech training set. 
-```
-./scripts/preprocess.sh  # Convert FLAC to WAV; remove silence. 
-# Do simulation.
-./scripts/run_meetings.sh SimLibriCSS-train train 
-./scripts/run_meetings.sh SimLibriCSS-dev dev 
-./scripts/run_meetings.sh SimLibriCSS-test test 
-```
-Use *--vad* option if you want to use VAD-segmented signals for the simulation. This increases the accuracy of the overlap time rate calculation. However, this is not desirable if you want to use the data for ASR model training. 
-
+See [EXAMPLES.md](EXAMPLES.md).
 
 ## Plan
 
