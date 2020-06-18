@@ -36,26 +36,13 @@ source ./path.sh  # This is created by install.sh.
 
 ## Examples
 
-### 1. Multi-channel speech separation model training
-
-[1] Z. Chen, T. Yoshioka, L. Lu, T. Zhou, Z. Meng, Y. Luo, J. Wu, X. Xiao, J. Li, "Continuous Speech Separation: Dataset and Analysis," ICASSP 2020 - 2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Barcelona, Spain, 2020, pp. 7284-7288, doi: 10.1109/ICASSP40776.2020.9053426.
-
-The separation model training data used in [1] can be generated as follows. 
-You may want to modify configs/cmd.sh, depending on the queueing system you're using. 
-```
-./scripts/preprocess.sh  # Convert FLAC to WAV; remove silence. 
-./scripts/run.sh  # Do simulation. 
-```
-
-### 2. Meeting-style audio simulation
-
-The following will generate a set of meeting-style audio files, each consisting of three speakers each with three utterances. There are some sessions that have fewer speakers because the number of utterances per speaker is not uniform in the LibriSpeech training set. 
-```
-./scripts/preprocess.sh  # Convert FLAC to WAV; remove silence. 
-./scripts/run_meetings.sh  # Do simulation. 
-```
-
+See [EXAMPLES.md](EXAMPLES.md).
 
 ## Plan
 
 See [TODO.md](TODO.md). 
+
+
+## References
+
+[1] Z. Chen, T. Yoshioka, L. Lu, T. Zhou, Z. Meng, Y. Luo, J. Wu, X. Xiao, J. Li, "Continuous Speech Separation: Dataset and Analysis," ICASSP 2020 - 2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Barcelona, Spain, 2020, pp. 7284-7288, doi: 10.1109/ICASSP40776.2020.9053426.
