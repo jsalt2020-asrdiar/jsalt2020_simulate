@@ -16,6 +16,7 @@
 
 ## Finished
 
-- Add dev/eval simulation. 
-- Expose more control parameters. 
+- PR #7
+    - Add dev/eval simulation. 
+    - Expose more control parameters. 
 
