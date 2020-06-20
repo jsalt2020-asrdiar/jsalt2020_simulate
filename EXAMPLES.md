@@ -2,7 +2,7 @@
 The scripts under *scripts* directory print usage messages with *--help* option. They support various options, including *--split* option to control the degree of parallelism.
 
 
-## 1. Multi-channel speech separation model training
+## 1. Multi-channel speech separation model training (mixtures of a few utterances)
 
 The separation model training data used in [1] can be generated as follows. 
 You may want to modify configs/cmd.sh, depending on the queueing system you're using. 
@@ -74,3 +74,24 @@ $ ./scripts/run_meetings.sh --help
         --help      : Show this message.
     ''
 ```
+
+## 3. Experiment reproducibility
+
+When the default option values are used (including --split), the simulation tools should generate the same data. You can check if your data exactly match the standard ones as follows. 
+- Utterance mixing
+    ```
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav utt train
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav utt dev
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav utt test
+    ```
+- Meeting-style simulation
+    ```
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav mtg train
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav mtg dev
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav mtg test
+    ```
+
+CAUTION: The current implementation does not ensure repoducibility when the --split value is changed because the random seed is initialized for each process!!!
+
+
+

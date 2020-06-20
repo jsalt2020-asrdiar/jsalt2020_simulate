@@ -13,7 +13,7 @@ function print_usage_and_exit {
     echo "    ''"
     echo "    < $CMD >"
     echo ""
-    echo "    Usage: $CMD [--split N] [--cfg FILE] [--onespkr X] [--vad] [--help] dest-dir set"
+    echo "    Usage: $CMD [--split N] [--cfg FILE] [--times N] [--onespkr X] [--vad] [--help] dest-dir set"
     echo ""
     echo "    Description: Preprocess the original LibriSpeech data."
     echo ""
@@ -24,6 +24,7 @@ function print_usage_and_exit {
     echo "    Options: "
     echo "        --split N   : Split the data set into N subsets for parallel processing. N defaults to 32."    
     echo "        --cfg FILE  : Simulation configuration file. FILE defaults to <repo-root>/configs/2mix_reverb_stanoise.json."
+    echo "        --times N   : Each utterance is used N times. This could be used for data augmentation. N defaults to 1."
     echo "        --onespkr X : Probability with which a purely single speaker sample is generated."
     echo "        --vad       : Use VAD-segmented signals."
     echo "        --help      : Show this message."
@@ -60,6 +61,10 @@ do
     elif [ "$1" == --cfg ]; then
         shift
         cfgfile=$1
+        shift
+    elif [ "$1" == --times ]; then
+        shift
+        ncopies=$1
         shift
     elif [ "$1" == --onespkr ]; then
         shift
@@ -116,8 +121,9 @@ fi
 tgtroot=$EXPROOT/data/$1
 
 # Hyper-parameters
-ncopies=1
-rndseed=1000
+if [ ! -v ncopies ]; then
+    ncopies=1
+fi
 if [ ! -v single_spkr ]; then
     single_spkr=0.08
 fi
@@ -149,7 +155,7 @@ python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/${set}.${j}.json;
 # Generate mixture specs. 
 tgtdir=$tgtroot/wav
 specjson=$tgtroot/mixspec.json
-python $mixspec --inputfile $datajson --outputfile $specjson --ncopies $ncopies --single_speaker_percentage $single_spkr --targetdir $tgtdir
+python $mixspec --inputfile $datajson --outputfile $specjson --ncopies $ncopies --random_seed 0 --single_speaker_percentage $single_spkr --targetdir $tgtdir
 
 # Split $tgtroot/mixspec.json into several smaller json files: $splitdir/mixspec.JOB.json
 python $splitjson --inputfile $specjson --number_splits $nj --outputdir $splitdir
@@ -157,5 +163,5 @@ python $splitjson --inputfile $specjson --number_splits $nj --outputdir $splitdi
 # Generate mixed audio files. 
 mixlog=$tgtroot/mixlog.json
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
-    python $mixer --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed $rndseed --mixers_configfile $cfgfile --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json
+    python $mixer --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --mixers_configfile $cfgfile --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json
 python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/mixlog.${j}.json; done) > $mixlog

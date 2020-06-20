@@ -13,8 +13,8 @@ import libaueffect
 def main(args):
     # Make the results predictable.
     if args.random_seed is not None:
-        random.seed(args.random_seed + args.seed_bias)
-        np.random.seed(args.random_seed + args.seed_bias)
+        random.seed(args.random_seed)
+        np.random.seed(args.random_seed)
 
     # Read in the IO list. 
     with open(args.iolist) as f:
@@ -88,7 +88,6 @@ def main(args):
 def make_argparse():
     defaults = {'outlist' : 'tmp/audio_mixer_out.scp',
                 'log' : 'tmp/audio_mixer_run.json',
-                'seed_bias' : 0,
                 'ncopies' : 1,
                 'filename_style' : None}
 
@@ -111,8 +110,6 @@ def make_argparse():
                            help='Sampling frequency of output audio. Resample is performed if necessary.')
     proc_args.add_argument('--random_seed', metavar='N', type=int,
                            help='Seed for random number generators. The current system time is used when this option is not used.')
-    proc_args.add_argument('--seed_bias', metavar='N', type=int, default=defaults['seed_bias'],
-                           help='Random seed bias. Default value is {}).'.format(defaults['seed_bias']))
     proc_args.add_argument('--cancel_dcoffset', action='store_true',
                            help='Unbias the DC offset.')
 
