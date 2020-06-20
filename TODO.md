@@ -4,7 +4,6 @@
 
 - Save microphone images. 
 - Save each channel separately. 
-- Ensure simulation reproducibility against the --split value change. 
 
 
 ## Backlog
@@ -20,5 +19,9 @@
 
 - Add dev/eval simulation. 
 - Expose more control parameters. 
-- Add MD5 chucksum validation. 
-
+- PR #7
+    - Add dev/eval simulation. 
+    - Expose more control parameters. 
+- PR #8
+    - Ensure simulation reproducibility against the --split value change. 
+    - Add MD5 chucksum validation. 
