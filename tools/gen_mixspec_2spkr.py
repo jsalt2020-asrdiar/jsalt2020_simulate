@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import argparse, os, json, fnmatch, random, copy
 from collections import OrderedDict
+import numpy as np
 
 
 
@@ -96,7 +97,10 @@ def gen_pairs(orig_corpus, targetdir, single_speaker_percentage, appendix=''):
 
 
 def main(args):
-    random.seed(0)
+    # Make the results predictable.
+    if args.random_seed is not None:
+        random.seed(args.random_seed)
+        np.random.seed(args.random_seed)
 
     # Get the input files.
     with open(args.inputfile) as f:
@@ -134,6 +138,8 @@ def make_argparse():
                         help='Number of copies.')
     parser.add_argument('--single_speaker_percentage', metavar='X', required=True, type=float, 
                         help='This percentage of the input files are not mixed.')
+    parser.add_argument('--random_seed', metavar='N', type=int,
+                        help='Seed for random number generators. The current system time is used when this option is not used.')
     
 
     return parser

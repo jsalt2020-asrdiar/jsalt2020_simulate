@@ -164,7 +164,7 @@ python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/${set}.${j}.json;
 # Generate mixture specs. 
 tgtdir=$tgtroot/wav
 specjson=$tgtroot/mixspec.json
-python $mixspec --inputfile $datajson --outputfile $specjson --targetdir $tgtdir --speakers $speakers_per_session --utterances_per_speaker $utterances_per_speaker --overlap_time_ratio $overlap_time_ratio
+python $mixspec --inputfile $datajson --outputfile $specjson --targetdir $tgtdir --random_seed 0 --speakers $speakers_per_session --utterances_per_speaker $utterances_per_speaker --overlap_time_ratio $overlap_time_ratio
 
 # Split $tgtroot/mixspec.json into several smaller json files: $splitdir/mixspec.JOB.json
 python $splitjson --inputfile $specjson --number_splits $nj --outputdir $splitdir
@@ -172,5 +172,5 @@ python $splitjson --inputfile $specjson --number_splits $nj --outputdir $splitdi
 # Generate mixed audio files. 
 mixlog=$tgtroot/mixlog.json
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
-    python $mixer --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json --mixers_configfile $cfgfile
+    python $mixer --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json --mixers_configfile $cfgfile
 python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/mixlog.${j}.json; done) > $mixlog

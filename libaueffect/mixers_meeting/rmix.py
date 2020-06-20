@@ -38,7 +38,7 @@ class ReverbMixMeeting(object):
 
     def __call__(self, inputs, offsets, speaker_labels):
         # Determine the number of speakers. 
-        spkrs = list(set(speaker_labels))
+        spkrs = sorted(list(set(speaker_labels)))
         nspkrs = len(spkrs)
 
         # Generate RIRs. 

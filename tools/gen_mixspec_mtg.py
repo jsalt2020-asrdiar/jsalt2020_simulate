@@ -135,7 +135,10 @@ def give_timing(sess_list, overlap_time_ratio=0.3, sil_prob=0.2, sil_dur=[0.3, 2
 
 
 def main(args):
-    random.seed(0)
+    # Make the results predictable.
+    if args.random_seed is not None:
+        random.seed(args.random_seed)
+        np.random.seed(args.random_seed)
 
     # Get the input files.
     with open(args.inputfile) as f:
@@ -160,7 +163,7 @@ def main(args):
     ndigits = len(str(len(sess_list)))
     ptrn = f'[:0{ndigits}d].wav'.replace('[', '{').replace(']', '}')
     for i, sess in enumerate(sess_list):
-        speakers = list( set( [utt['speaker_id'] for utt in sess] ) )
+        speakers = sorted(list(set([utt['speaker_id'] for utt in sess])))
         sess_out = os.path.join(args.targetdir, ptrn.format(i))
         dic = {'inputs': sess, 
                'output': sess_out, 
@@ -200,6 +203,8 @@ def make_argparse():
                           help='Probability with which silence happens between neighboring utterances.')
     sim_args.add_argument('--silence_duration', nargs=2, type=float, metavar=('<min-sil>', '<max-sil>'), default=[0.3, 2.0], 
                           help='Duration of inter-utterance silence.')
+    sim_args.add_argument('--random_seed', metavar='N', type=int,
+                          help='Seed for random number generators. The current system time is used when this option is not used.')
 
     return parser
 
