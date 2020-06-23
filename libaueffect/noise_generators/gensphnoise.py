@@ -23,6 +23,8 @@ class SphericalNoiseGenerator(object):
         # microphone array geometry
         if micarray == 'circular7':
             self._micarray = np.concatenate([np.zeros((1,3)), np.array([0.0425 * np.array([np.cos(i * np.pi/3), np.sin(i * np.pi/3), 0]) for i in range(6)])])
+        elif micarray == 'mono':
+            self._micarray = np.zeros((1,3))
         else:
             self._micarray = micarray
 

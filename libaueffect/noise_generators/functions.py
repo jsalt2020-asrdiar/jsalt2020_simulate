@@ -59,6 +59,10 @@ def snr_scale_factor(x, n, snr_dB):
     return alpha
 
 def sample_sphere(num_points):
+    if num_points == 1:
+        loc_xyz = np.zeros((3,1))
+        return loc_xyz
+
     # theta = elevation
     # phi = azimuth
     radius=1
@@ -130,10 +134,14 @@ def sample_circle(num_points):
 # Journal of the Acoustical Society of America, Vol. 122, Issue 6, pp. 3464-3470, Dec. 2007.
 # added the spectral shaping to "Hoth" noise profile
 def generate_isotropic_noise(mic_xyz, N, samp_rate, type='sph', spectrum='hoth'):
-    num_points = 64
     num_mics = mic_xyz.shape[0]
     fft_size = int(2 ** np.ceil(np.log2(N)))
     fft_size_by_2 = int(fft_size/2)
+
+    if num_mics == 1:
+        num_points = 1
+    else:
+        num_points = 64
 
     # calculate relative microphone positions wrt mic 1
     P_rel = np.zeros([num_mics,3])
