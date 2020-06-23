@@ -24,7 +24,7 @@ def main(args):
     # Check if the source directories exist. 
     for srcdir in args.srcdir:
         if not os.path.isdir(srcdir):
-            raise IOError('Specified directory cannot be found: {}'.format(args.srcdir))
+            raise IOError('Specified directory cannot be found: {}'.format(srcdir))
 
     # Create the output directory. 
     tgtdir = os.path.dirname(os.path.abspath(args.outlist))

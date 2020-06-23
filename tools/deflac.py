@@ -9,7 +9,7 @@ def main(args):
     # Check if the source directories exist. 
     for srcdir in args.srcdir:
         if not os.path.isdir(srcdir):
-            raise IOError('Specified directory cannot be found: {}'.format(args.srcdir))
+            raise IOError('Specified directory cannot be found: {}'.format(srcdir))
 
     for srcdir in args.srcdir:
         # Count the number of files to be processed. 

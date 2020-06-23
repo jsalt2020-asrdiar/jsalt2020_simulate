@@ -97,14 +97,14 @@ do
 
     # Convert FLAC files to WAV.
     if [ "$set" == train ]; then
-        python $deflac --srcdir $srcdir/train-clean-100 $srcdir/train-clean-360 --dstdir $dstdir/wav
+        python $deflac --srcdir $srcdir/train-clean-100 $srcdir/train-clean-360 $srcdir/train-other-500 --dstdir $dstdir/wav
     else
         python $deflac --srcdir $srcdir/${set}-clean --dstdir $dstdir/wav
     fi
 
     # List the original wav files.
     if [ "$set" == train ]; then
-        python $gen_filelist --srcdir $dstdir/wav/train-clean-100 $dstdir/wav/train-clean-360 --outlist $dstdir/filelist/${set}.list
+        python $gen_filelist --srcdir $dstdir/wav/train-clean-100 $dstdir/wav/train-clean-360 $dstdir/wav/train-other-500 --outlist $dstdir/filelist/${set}.list
     else
         python $gen_filelist --srcdir $dstdir/wav/${set}-clean --outlist $dstdir/filelist/${set}.list
     fi        
