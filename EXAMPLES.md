@@ -21,7 +21,7 @@ $ ./scripts/run.sh --help
     ''
     < run.sh >
 
-    Usage: run.sh [--split N] [--cfg FILE] [--onespkr X] [--vad] [--help] dest-dir set
+    Usage: run.sh [--split N] [--cfg FILE] [--times N] [--subsample X] [--onespkr X] [--vad] [--save_channels_separately] [--save_anechoic] [--help] dest-dir set
 
     Description: Preprocess the original LibriSpeech data.
 
@@ -30,11 +30,15 @@ $ ./scripts/run.sh --help
         set: {train|dev|eval}, subset to process.
 
     Options:
-        --split N   : Split the data set into N subsets for parallel processing. N defaults to 32.
-        --cfg FILE  : Simulation configuration file. FILE defaults to <repo-root>/configs/2mix_reverb_stanoise.json.
-        --onespkr X : Probability with which a purely single speaker sample is generated.
-        --vad       : Use VAD-segmented signals.
-        --help      : Show this message.
+        --split N                  : Split the data set into N subsets for parallel processing. N defaults to 32.
+        --cfg FILE                 : Simulation configuration file. FILE defaults to <repo-root>/configs/2mix_reverb_stanoise.json.
+        --times N                  : Each utterance is used N times. This could be used for data augmentation. N defaults to 1.
+        --subsample X              : Use X*100 % of the files.
+        --onespkr X                : Probability with which a purely single speaker sample is generated.
+        --vad                      : Use VAD-segmented signals.
+        --save_channels_separately : Save each output channel separately.
+        --save_anechoic            : Save anechoic signals and RIRs.
+        --help                     : Show this message.
     ''
 ```
 

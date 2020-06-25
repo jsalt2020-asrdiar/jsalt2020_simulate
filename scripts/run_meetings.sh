@@ -13,7 +13,7 @@ function print_usage_and_exit {
     echo "    ''"
     echo "    < $CMD >"
     echo ""
-    echo "    Usage: $CMD [--split N] [--vad] [--help] dest-dir set"
+    echo "    Usage: $CMD [--split N] [--cfg FILE] [--overlap X] [--utt-per-spkr N] [--spkr-per-sess N] [--vad] [--help] dest-dir set"
     echo ""
     echo "    Description: Preprocess the original LibriSpeech data."
     echo ""
@@ -22,13 +22,14 @@ function print_usage_and_exit {
     echo "        set: {train|dev|eval}, subset to process."
     echo ""
     echo "    Options: "
-    echo "        --split N: Split the data set into N subsets for parallel processing. N defaults to 32."    
-    echo "        --cfg FILE  : Room acoustics configuration file. FILE defaults to <repo-root>/configs/meeting_reverb.json."
-    echo "        --overlap X : Overlap time ratio, which defaults to 0.3."
-    echo "        --utt-per-spkr N : Number of utterances per speaker in each session, which defaults to 3."
-    echo "        --spkr-per-sess N : Number of speakers per session, which defaults to 3."
-    echo "        --vad       : Use VAD-segmented signals."
-    echo "        --help      : Show this message."
+    echo "        --split N                  : Split the data set into N subsets for parallel processing. N defaults to 32."    
+    echo "        --cfg FILE                 : Room acoustics configuration file. FILE defaults to <repo-root>/configs/meeting_reverb.json."
+    echo "        --overlap X                : Overlap time ratio, which defaults to 0.3."
+    echo "        --utt-per-spkr N           : Number of utterances per speaker in each session, which defaults to 3."
+    echo "        --spkr-per-sess N          : Number of speakers per session, which defaults to 3."
+    echo "        --vad                      : Use VAD-segmented signals."
+    echo "        --save_channels_separately : Save each output channel separately."
+    echo "        --help                     : Show this message."
     echo "    ''"
     echo ""
     exit 1
@@ -70,6 +71,9 @@ do
         shift
     elif [ "$1" == --vad ]; then
         vad=
+        shift
+    elif [ "$1" == --save_channels_separately ]; then
+        save_channels_separately=
         shift
     elif [ "$1" == --split ]; then
         shift
@@ -171,6 +175,11 @@ python $splitjson --inputfile $specjson --number_splits $nj --outputdir $splitdi
 
 # Generate mixed audio files. 
 mixlog=$tgtroot/mixlog.json
+if [ -v save_channels_separately ]; then
+    opts='--save_each_channel_in_onefile'
+else
+    opts=''
+fi
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
-    python $mixer --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json --mixers_configfile $cfgfile
+    python $mixer $opts --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json --mixers_configfile $cfgfile
 python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/mixlog.${j}.json; done) > $mixlog

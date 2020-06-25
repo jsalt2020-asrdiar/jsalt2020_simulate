@@ -57,10 +57,20 @@ def main(args):
                 # Choose the mixer to use. 
                 mixer = mixers[np.random.choice(nmixers, p=priors)]
 
-                y, p = mixer(x, sr, output_filename=outfile, input_filenames=infiles, save_anechoic=args.save_anechoic, save_rir=args.save_rir)
+                y, p = mixer(x, 
+                             sr, 
+                             output_filename=outfile, 
+                             input_filenames=infiles, 
+                             save_anechoic=args.save_anechoic, 
+                             save_rir=args.save_rir, 
+                             save_as_one_file=(not args.save_each_channel_in_onefile))
 
                 print(os.path.abspath(outfile), file=outfile_stream)
-                libaueffect.write_wav(y, outfile, sample_rate=sr, avoid_clipping=False)
+                libaueffect.write_wav(y, 
+                                      outfile, 
+                                      sample_rate=sr, 
+                                      avoid_clipping=False, 
+                                      save_as_one_file=(not args.save_each_channel_in_onefile))
 
                 params = OrderedDict([('output', outfile), ('inputs', infiles)] + list(p.items()))
                 json.dump(params, log_stream, indent=4)
@@ -103,6 +113,8 @@ def make_argparse():
                            help='Seed for random number generators. The current system time is used when this option is not used.')
     proc_args.add_argument('--cancel_dcoffset', action='store_true',
                            help='Unbias the DC offset.')
+    proc_args.add_argument('--save_each_channel_in_onefile', action='store_true', 
+                           help='Save each channel in a separate file.')
 
     mix_args = parser.add_argument_group('Mixer options')
     mix_args.add_argument('--mixers_configfile', metavar='FILE', 

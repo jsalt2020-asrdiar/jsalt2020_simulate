@@ -53,7 +53,7 @@ class ReverbMixInclusiveNoise(object):
                 self._noise_generator = generator_pool[id]
 
 
-    def __call__(self, inputs, samplerate, output_filename, input_filenames, save_rir=False, save_anechoic=False):
+    def __call__(self, inputs, samplerate, output_filename, input_filenames, save_rir=False, save_anechoic=False, save_as_one_file=False):
         print(output_filename)
         for i, f in enumerate(input_filenames):
             if i == 0:
@@ -150,21 +150,21 @@ class ReverbMixInclusiveNoise(object):
         # Save the reverberant source signals. 
         path, ext = os.path.splitext(output_filename)        
         for i in range(len(y)):
-            outfile = '{}_{}{}'.format(path, i, ext)            
-            libaueffect.write_wav(y[i], outfile, sample_rate=samplerate, avoid_clipping=False)
+            outfile = '{}_s{}{}'.format(path, i, ext)            
+            libaueffect.write_wav(y[i], outfile, sample_rate=samplerate, avoid_clipping=False, save_as_one_file=save_as_one_file)
             params.append(('source{}'.format(i), outfile))
 
         # Save the noise. 
         if self._noise_generator is not None:
-            outfile = '{}_{}{}'.format(path, len(y), ext)            
-            libaueffect.write_wav(n, outfile, sample_rate=samplerate, avoid_clipping=False)
+            outfile = '{}_s{}{}'.format(path, len(y), ext)            
+            libaueffect.write_wav(n, outfile, sample_rate=samplerate, avoid_clipping=False, save_as_one_file=save_as_one_file)
             params.append(('noise', outfile))
 
         # Save the RIRs.
         if save_rir:
             for i in range(len(h)):
                 outfile = '{}_r{}{}'.format(path, i, ext)            
-                libaueffect.write_wav(h[i], outfile, sample_rate=samplerate, avoid_clipping=False)
+                libaueffect.write_wav(h[i], outfile, sample_rate=samplerate, avoid_clipping=False, save_as_one_file=save_as_one_file)
                 params.append(('rir{}'.format(i), outfile))
 
         # Save the anechoic source signals. 
@@ -172,7 +172,7 @@ class ReverbMixInclusiveNoise(object):
             path, ext = os.path.splitext(output_filename)        
             for i in range(len(x)):
                 outfile = '{}_a{}{}'.format(path, i, ext)            
-                libaueffect.write_wav(x[i], outfile, sample_rate=samplerate, avoid_clipping=False)
+                libaueffect.write_wav(x[i], outfile, sample_rate=samplerate, avoid_clipping=False, save_as_one_file=save_as_one_file)
                 params.append(('anechoic{}'.format(i), outfile))
 
         return u, OrderedDict(params)

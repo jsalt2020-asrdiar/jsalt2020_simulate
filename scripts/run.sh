@@ -13,7 +13,7 @@ function print_usage_and_exit {
     echo "    ''"
     echo "    < $CMD >"
     echo ""
-    echo "    Usage: $CMD [--split N] [--cfg FILE] [--times N] [--onespkr X] [--vad] [--help] dest-dir set"
+    echo "    Usage: $CMD [--split N] [--cfg FILE] [--times N] [--subsample X] [--onespkr X] [--save_channels_separately] [--vad] [--save_anechoic] [--help] dest-dir set"
     echo ""
     echo "    Description: Preprocess the original LibriSpeech data."
     echo ""
@@ -22,12 +22,15 @@ function print_usage_and_exit {
     echo "        set: {train|dev|eval}, subset to process."
     echo ""
     echo "    Options: "
-    echo "        --split N   : Split the data set into N subsets for parallel processing. N defaults to 32."    
-    echo "        --cfg FILE  : Simulation configuration file. FILE defaults to <repo-root>/configs/2mix_reverb_stanoise.json."
-    echo "        --times N   : Each utterance is used N times. This could be used for data augmentation. N defaults to 1."
-    echo "        --onespkr X : Probability with which a purely single speaker sample is generated."
-    echo "        --vad       : Use VAD-segmented signals."
-    echo "        --help      : Show this message."
+    echo "        --split N                  : Split the data set into N subsets for parallel processing. N defaults to 32."    
+    echo "        --cfg FILE                 : Simulation configuration file. FILE defaults to <repo-root>/configs/2mix_reverb_stanoise.json."
+    echo "        --times N                  : Each utterance is used N times. This could be used for data augmentation. N defaults to 1."
+    echo "        --subsample X              : Use X*100 % of the files."
+    echo "        --onespkr X                : Probability with which a purely single speaker sample is generated."
+    echo "        --vad                      : Use VAD-segmented signals."
+    echo "        --save_channels_separately : Save each output channel separately."
+    echo "        --save_anechoic            : Save anechoic signals and RIRs."
+    echo "        --help                     : Show this message."
     echo "    ''"
     echo ""
     exit 1
@@ -54,6 +57,12 @@ do
     elif [ "$1" == --vad ]; then
         vad=
         shift
+    elif [ "$1" == --save_channels_separately ]; then
+        save_channels_separately=
+        shift
+    elif [ "$1" == --save_anechoic ]; then
+        save_anechoic=
+        shift
     elif [ "$1" == --split ]; then
         shift
         nj=$1
@@ -65,6 +74,10 @@ do
     elif [ "$1" == --times ]; then
         shift
         ncopies=$1
+        shift
+    elif [ "$1" == --subsample ]; then
+        shift
+        subsample=$1
         shift
     elif [ "$1" == --onespkr ]; then
         shift
@@ -107,6 +120,7 @@ export PATH=${KALDI_UTILS}:${PATH}
 splitjson=$ROOTDIR/tools/splitjson.py
 mergejson=$ROOTDIR/tools/mergejsons.py
 gen_filelist=$ROOTDIR/tools/gen_filelist.py
+sample_filelist=$ROOTDIR/tools/sample_filelist.py
 list2json=$ROOTDIR/tools/list2json_librispeech.py
 mixspec=$ROOTDIR/tools/gen_mixspec_2spkr.py
 mixer=$ROOTDIR/tools/mixaudio.py
@@ -135,6 +149,11 @@ fi
 datalist=$tgtroot/${set}.list
 python $gen_filelist --srcdir $srcdir --outlist $datalist
 
+# Subsample the files. 
+if [ -v subsample ]; then
+    python $sample_filelist --inlist $datalist --outlist $datalist --subset_size $subsample
+fi
+
 # Split datalist for parallel processing
 splitdir=${tgtroot}/split${nj}
 mkdir -p ${splitdir}/log
@@ -162,6 +181,14 @@ python $splitjson --inputfile $specjson --number_splits $nj --outputdir $splitdi
 
 # Generate mixed audio files. 
 mixlog=$tgtroot/mixlog.json
+if [ -v save_channels_separately ]; then
+    opts='--save_each_channel_in_onefile'
+else
+    opts=''
+fi
+if [ -v save_anechoic ]; then
+    opts="$opts --save_anechoic --save_rir"
+fi
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
-    python $mixer --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --mixers_configfile $cfgfile --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json
+    python $mixer $opts --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --mixers_configfile $cfgfile --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json
 python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/mixlog.${j}.json; done) > $mixlog

@@ -217,7 +217,7 @@ def append_wav(x, path):
 
 
 
-def write_wav(x, path, sample_rate=16000, avoid_clipping=False):
+def write_wav(x, path, sample_rate=16000, avoid_clipping=False, save_as_one_file=True):
     x = copy.deepcopy(x)
 
     if avoid_clipping:
@@ -230,7 +230,15 @@ def write_wav(x, path, sample_rate=16000, avoid_clipping=False):
         x = x.T
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    scipy.io.wavfile.write(path, sample_rate, x)
+
+    if save_as_one_file or x.ndim == 1:
+        scipy.io.wavfile.write(path, sample_rate, x)
+    else:        
+        nmics = x.shape[1]
+        for i in range(nmics):
+            basename = path[:-4] if path[-4:] == '.wav' else path
+            fname = f'{basename}__{i}.wav'
+            scipy.io.wavfile.write(fname, sample_rate, x[:, i])
 
 
 
