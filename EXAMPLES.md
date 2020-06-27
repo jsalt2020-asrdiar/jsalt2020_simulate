@@ -44,7 +44,7 @@ $ ./scripts/run.sh --help
 
 ## 2. Meeting-style audio simulation
 
-The following will generate a set of meeting-style audio files, each consisting of three speakers each with three utterances. There are some sessions that have fewer speakers because the number of utterances per speaker is not uniform in the LibriSpeech training set. 
+The following will generate a set of meeting-style audio files. 
 ```
 ./scripts/preprocess.sh  # Convert FLAC to WAV; remove silence. 
 # Do simulation.
@@ -60,7 +60,7 @@ $ ./scripts/run_meetings.sh --help
     ''
     < run_meetings.sh >
 
-    Usage: run_meetings.sh [--split N] [--vad] [--help] dest-dir set
+    Usage: run_meetings.sh [--split N] [--roomcfg FILE] [--dyncfg FILE] [--vad] [--help] dest-dir set
 
     Description: Preprocess the original LibriSpeech data.
 
@@ -69,19 +69,33 @@ $ ./scripts/run_meetings.sh --help
         set: {train|dev|eval}, subset to process.
 
     Options:
-        --split N: Split the data set into N subsets for parallel processing. N defaults to 32.
-        --cfg FILE  : Room acoustics configuration file. FILE defaults to <repo-root>/configs/meeting_reverb.json.
-        --overlap X : Overlap time ratio, which defaults to 0.3.
-        --utt-per-spkr N : Number of utterances per speaker in each session, which defaults to 3.
-        --spkr-per-sess N : Number of speakers per session, which defaults to 3.
-        --vad       : Use VAD-segmented signals.
-        --help      : Show this message.
+        --split N                  : Split the data set into N subsets for parallel processing. N defaults to 32.
+        --roomcfg FILE             : Room acoustics configuration file. FILE defaults to <repo-root>/configs/common/meeting_reverb.json.
+        --dyncfg FILE              : Room acoustics configuration file. FILE defaults to <repo-root>/configs/common/meeting_dynamics.json.
+        --vad                      : Use VAD-segmented signals.
+        --save_channels_separately : Save each output channel separately.
+        --help                     : Show this message.
     ''
 ```
 
+### Notes on the meeting simulation configurations
+- The room acoustics and speaker dynamics (i.e., how to arrange different utterances of different speakers to form sessions) are configured by the files specified with --roomcfg and --dyncfg, respectively. 
+    - For the room acoustics, there are three template configuration files under configs/common. 
+        - meeting_clean.json: single-channel output, no reverberation and noise. This may be used for verification purposes. 
+        - meeting_reverb_mono.json: single-channel output, both reverberation and stationary noise added. If you don't need multi-channel audio, you could use this version. This is much faster than the multi-chanel simulation. 
+        - meeting_reverb.json (default): 7-channel output, both reverberation and stationary diffuse noise added. 
+    - For the speaker dynamics configuration, you can find one file, named meeting_dynamics.json, under configs/common. This uses the following settings which would be suitable for diarization learning. 
+        - The number of speakers per session ranges from 2 to 8. 
+        - Each session consists of 12 to 18 utterances.
+        - Overlap time ratio is randomly picked from 0 to 0.3 s. 
+        - Silence is randomly inserted between neighboring utterances with a probability of 0.1. 
+- The current configuration was determined based on this doc https://docs.google.com/document/d/13WJvQAnYBj9n-7jSotqVvflYUqaZuUnL/edit?ts=5ef2b658 as well as feedback from Zili (thanks Zili). 
+
+
+
 ## 3. Experiment reproducibility
 
-CAUTION: THE CHECKSUMS ARE NOT YET UPDATED TO REFLECT THE LATEST CHANGES!!!
+**CAUTION: THE CHECKSUMS ARE NOT YET UPDATED TO REFLECT THE LATEST CHANGES!!! PLEASE IGNORE THIS SECTION FOR NOW. THERE WILL BE MULTIPLE ITERATIONS BEFORE WE CAN REALLY FINALIZE THE SIMULATION SETTINGS.**
 
 When the default option values are used (including --split), the simulation tools should generate the same data. You can check if your data exactly match the standard ones as follows. 
 - Utterance mixing
