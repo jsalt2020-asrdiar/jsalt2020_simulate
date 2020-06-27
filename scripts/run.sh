@@ -142,7 +142,7 @@ if [ ! -v single_spkr ]; then
     single_spkr=0.08
 fi
 if [ ! -v cfgfile ]; then
-    cfgfile=$ROOTDIR/configs/2mix_reverb_stanoise.json
+    cfgfile=$ROOTDIR/configs/common/2mix_reverb_stanoise.json
 fi
 
 # List the source files. 
