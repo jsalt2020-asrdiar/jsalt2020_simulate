@@ -90,7 +90,9 @@ $ ./scripts/run_meetings.sh --help
         - Overlap time ratio is randomly picked from 0 to 0.3 s. 
         - Silence is randomly inserted between neighboring utterances with a probability of 0.1. 
 - The current configuration was determined based on this doc https://docs.google.com/document/d/13WJvQAnYBj9n-7jSotqVvflYUqaZuUnL/edit?ts=5ef2b658 as well as feedback from Zili (thanks Zili). 
-
+- Two things must be noted regarding the overlap time ratio. 
+    - Each utterance of the original LibriSpeech corpus is assumed not to contain silence for simplicity, which is not actually true. Ideally, the overlap time ratio should be calculated based on forced alignment results. This is currently put in the backlog. 
+    - The actual overlap time ration can be lower than the target overlap time ratio due to the variation of utterance lengths. For example, imagine mixing a 20-s utterance and a 5-s utterance. The maximum overlap time ratio that can be achieved is 5/20=0.25. 
 
 
 ## 3. Experiment reproducibility
@@ -100,18 +102,17 @@ $ ./scripts/run_meetings.sh --help
 When the default option values are used (including --split), the simulation tools should generate the same data. You can check if your data exactly match the standard ones as follows. 
 - Utterance mixing
     ```
-    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav utt train
-    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav utt dev
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-train/wav utt train
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-dev/wav utt dev
     ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav utt test
     ```
 - Meeting-style simulation
     ```
-    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav mtg train
-    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav mtg dev
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-train/wav mtg train
+    ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-dev/wav mtg dev
     ./scripts/check_data.sh $EXPROOT/data/SimLibriCSS-test/wav mtg test
     ```
 
-CAUTION: The current implementation does not ensure repoducibility when the --split value is changed because the random seed is initialized for each process!!!
 
 
 
