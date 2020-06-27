@@ -81,6 +81,8 @@ $ ./scripts/run_meetings.sh --help
 
 ## 3. Experiment reproducibility
 
+CAUTION: THE CHECKSUMS ARE NOT YET UPDATED TO REFLECT THE LATEST CHANGES!!!
+
 When the default option values are used (including --split), the simulation tools should generate the same data. You can check if your data exactly match the standard ones as follows. 
 - Utterance mixing
     ```
