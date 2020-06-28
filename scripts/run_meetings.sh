@@ -124,7 +124,7 @@ if [ ! -v roomcfg ]; then
     roomcfg=$ROOTDIR/configs/common/meeting_reverb.json
 fi
 if [ ! -v dyncfg ]; then
-    roomcfg=$ROOTDIR/configs/common/meeting_dynamics.json
+    dyncfg=$ROOTDIR/configs/common/meeting_dynamics.json
 fi
 
 # List the source files. 
@@ -151,7 +151,7 @@ python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/${set}.${j}.json;
 # Generate mixture specs. 
 tgtdir=$tgtroot/wav
 specjson=$tgtroot/mixspec.json
-python $mixspec --inputfile $datajson --outputfile $specjson --targetdir $tgtdir --random_seed 0 --config ./configs/common/meeting_dynamics.json
+python $mixspec --inputfile $datajson --outputfile $specjson --targetdir $tgtdir --random_seed 0 --config $dyncfg
 
 # Split $tgtroot/mixspec.json into several smaller json files: $splitdir/mixspec.JOB.json
 python $splitjson --inputfile $specjson --number_splits $nj --outputdir $splitdir
