@@ -2,47 +2,7 @@
 The scripts under *scripts* directory print usage messages with *--help* option. They support various options, including *--split* option to control the degree of parallelism.
 
 
-## 1. Multi-channel speech separation model training (mixtures of a few utterances)
-
-The separation model training data used in [1] can be generated as follows. 
-You may want to modify configs/cmd.sh, depending on the queueing system you're using. 
-```
-./scripts/preprocess.sh  # Convert FLAC to WAV; remove silence. 
-# Do simulation. 
-./scripts/run.sh SimLibriUttmix-train train
-./scripts/run.sh SimLibriUttmix-dev dev
-./scripts/run.sh SimLibriUttmix-test test
-```
-
-The execution script supports the following options. 
-```
-$ ./scripts/run.sh --help
-
-    ''
-    < run.sh >
-
-    Usage: run.sh [--split N] [--cfg FILE] [--times N] [--subsample X] [--onespkr X] [--vad] [--save_channels_separately] [--save_anechoic] [--help] dest-dir set
-
-    Description: Preprocess the original LibriSpeech data.
-
-    Args:
-        dest-dir: Destination directory, relative to $EXPROOT/data.
-        set: {train|dev|eval}, subset to process.
-
-    Options:
-        --split N                  : Split the data set into N subsets for parallel processing. N defaults to 32.
-        --cfg FILE                 : Simulation configuration file. FILE defaults to <repo-root>/configs/2mix_reverb_stanoise.json.
-        --times N                  : Each utterance is used N times. This could be used for data augmentation. N defaults to 1.
-        --subsample X              : Use X*100 % of the files.
-        --onespkr X                : Probability with which a purely single speaker sample is generated.
-        --vad                      : Use VAD-segmented signals.
-        --save_channels_separately : Save each output channel separately.
-        --save_anechoic            : Save anechoic signals and RIRs.
-        --help                     : Show this message.
-    ''
-```
-
-## 2. Meeting-style audio simulation
+## 1. Meeting-style audio simulation
 
 The following will generate a set of meeting-style audio files. 
 ```
@@ -88,11 +48,54 @@ $ ./scripts/run_meetings.sh --help
         - The number of speakers per session ranges from 2 to 8. 
         - Each session consists of 12 to 18 utterances.
         - Overlap time ratio is randomly picked from 0 to 0.3 s. 
-        - Silence is randomly inserted between neighboring utterances with a probability of 0.1. 
-- The current configuration was determined based on this doc https://docs.google.com/document/d/13WJvQAnYBj9n-7jSotqVvflYUqaZuUnL/edit?ts=5ef2b658 as well as feedback from Zili (thanks Zili). 
+        - Silence is randomly inserted between neighboring utterances with a probability of 0.1.
+        - With these settings, each resultant session tends to last for 1-3 minutes. 
+- The current configuration was determined based on this doc https://docs.google.com/document/d/13WJvQAnYBj9n-7jSotqVvflYUqaZuUnL/edit?ts=5ef2b658 as well as the feedback received. 
 - Two things must be noted regarding the overlap time ratio. 
     - Each utterance of the original LibriSpeech corpus is assumed not to contain silence for simplicity, which is not actually true. Ideally, the overlap time ratio should be calculated based on forced alignment results. This is currently put in the backlog. 
-    - The actual overlap time ration can be lower than the target overlap time ratio due to the variation of utterance lengths. For example, imagine mixing a 20-s utterance and a 5-s utterance. The maximum overlap time ratio that can be achieved is 5/20=0.25. 
+    - The actual overlap time ratio can be lower than the target overlap time ratio due to the variation of the utterance lengths. For example, imagine mixing a 20-s utterance and a 5-s utterance. The overlap time ration cannot be greater than 5/20=0.25. 
+
+
+## 2. Multi-channel speech separation model training (mixtures of a few utterances)
+
+The separation model training data used in [1] can be generated as follows. 
+You may want to modify configs/cmd.sh, depending on the queueing system you're using. 
+```
+./scripts/preprocess.sh  # Convert FLAC to WAV; remove silence. 
+# Do simulation. 
+./scripts/run.sh SimLibriUttmix-train train
+./scripts/run.sh SimLibriUttmix-dev dev
+./scripts/run.sh SimLibriUttmix-test test
+```
+
+The execution script supports the following options. 
+```
+$ ./scripts/run.sh --help
+
+    ''
+    < run.sh >
+
+    Usage: run.sh [--split N] [--cfg FILE] [--times N] [--subsample X] [--onespkr X] [--vad] [--save_channels_separately] [--save_anechoic] [--help] dest-dir set
+
+    Description: Preprocess the original LibriSpeech data.
+
+    Args:
+        dest-dir: Destination directory, relative to $EXPROOT/data.
+        set: {train|dev|eval}, subset to process.
+
+    Options:
+        --split N                  : Split the data set into N subsets for parallel processing. N defaults to 32.
+        --cfg FILE                 : Simulation configuration file. FILE defaults to <repo-root>/configs/2mix_reverb_stanoise.json.
+        --times N                  : Each utterance is used N times. This could be used for data augmentation. N defaults to 1.
+        --subsample X              : Use X*100 % of the files.
+        --onespkr X                : Probability with which a purely single speaker sample is generated.
+        --vad                      : Use VAD-segmented signals.
+        --save_channels_separately : Save each output channel separately.
+        --save_anechoic            : Save anechoic signals and RIRs.
+        --help                     : Show this message.
+    ''
+```
+
 
 
 ## 3. Experiment reproducibility
