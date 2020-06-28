@@ -1,0 +1,90 @@
+{
+  "probabilities": [ 0.6, 0.15, 0.15, 0.1 ],
+
+  "generators": [
+    {
+      "id": "room_simulator1",
+      "generator": "libaueffect.room_simulators.RandomRirGenerator",
+      "opts": {
+        "sound_velocity": 340,
+        "fs": 16000,
+        "roomdim_range_x": [ 5, 16 ],
+        "roomdim_range_y": [ 5, 16 ],
+        "roomdim_range_z": [ 2.5, 4.5 ],
+        "roomcenter_mic_dist_max_x": 2.0,
+        "roomcenter_mic_dist_max_y": 2.0,
+        "micpos_range_z": [ 0.4, 1.2 ],
+        "spkr_mic_dist_range_x": [ 0.5, 4 ],
+        "spkr_mic_dist_range_y": [ 0.5, 4 ],
+        "spkr_mic_dist_range_z": [ 0.1, 1.0 ],
+        "t60_range": [ 0.15, 0.6 ],
+        "min_angle_diff": 5, 
+        "micarray": "mono"
+      }
+    },
+    {
+      "id": "noise_generator1",
+      "generator": "libaueffect.noise_generators.SphericalNoiseGenerator",
+      "opts": {
+        "sound_velocity": 340,
+        "fs": 16000,
+        "micarray": "mono",
+        "spectral_shape": "hoth"
+      }
+    }
+  ],
+
+  "mixers": [
+    {
+      "mixer": "libaueffect.mixers_twosources.ReverbMixFullNoise",
+      "opts": {
+        "max_snr": 10.0,
+        "min_snr": 0.0,
+        "min_sir": -5.0,
+        "max_sir": 5.0,
+        "max_mixlen": 10.0,
+        "room_simulator": "id=room_simulator1",
+        "noise_generator": "id=noise_generator1"
+      }
+    },
+    {
+      "mixer": "libaueffect.mixers_twosources.ReverbMixPartialNoise",
+      "opts": {
+        "max_snr": 10.0,
+        "min_snr": 0.0,
+        "min_sir": -5.0,
+        "max_sir": 5.0,
+        "max_mixlen": 10.0,
+        "min_overlap": 0.4,
+        "room_simulator": "id=room_simulator1",
+        "noise_generator": "id=noise_generator1"
+      }
+    },
+    {
+      "mixer": "libaueffect.mixers_twosources.ReverbMixInclusiveNoise",
+      "opts": {
+        "max_snr": 10.0,
+        "min_snr": 0.0,
+        "min_sir": -5.0,
+        "max_sir": 5.0,
+        "max_mixlen": 10.0,
+        "min_overlap": 0.4,
+        "max_overlap": 0.8,
+        "room_simulator": "id=room_simulator1",
+        "noise_generator": "id=noise_generator1"
+      }
+    },
+    {
+      "mixer": "libaueffect.mixers_twosources.ReverbMixDisjointNoise",
+      "opts": {
+        "max_snr": 10.0,
+        "min_snr": 0.0,
+        "max_mixlen": 10.0,
+        "max_silence": 1.5,
+        "min_sillen":  2.0, 
+        "room_simulator": "id=room_simulator1",
+        "noise_generator": "id=noise_generator1"
+      }
+    }
+  ]
+}

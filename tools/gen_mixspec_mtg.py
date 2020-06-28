@@ -7,7 +7,7 @@ from scipy.stats import bernoulli
 
 
 
-def gen_session(corpus_spkrwise, tgtdir, nspkrs_per_session, nutts_per_spkr):
+def gen_session(corpus_spkrwise, tgtdir, config):
     ret = []
 
     # Initialize the dynamic corpus. 
@@ -18,11 +18,16 @@ def gen_session(corpus_spkrwise, tgtdir, nspkrs_per_session, nutts_per_spkr):
         random.shuffle(utterances)
         dyn_corpus[spkr] = utterances
 
+    # Get the list of the configs. 
+    cfgnames = sorted(list(config['probabilities'].keys()))
+    cfg_probs = np.array([config['probabilities'][c] for c in cfgnames])
+    cfg_probs /= np.sum(cfg_probs)
+
     # Consume all utterances. 
     iter = 0
     while len(dyn_corpus) > 0:
         iter += 1
-        speakers = list(dyn_corpus.keys())
+        speakers = list(dyn_corpus.keys())        
         random.shuffle(speakers)
 
         print('--')
@@ -39,13 +44,26 @@ def gen_session(corpus_spkrwise, tgtdir, nspkrs_per_session, nutts_per_spkr):
             print(f'\t({int(st):4} - {int(en):4}) {val}')
 
 
-        for i in range(0, len(speakers), nspkrs_per_session):
-            utterances_in_session = [[] for i in range(nutts_per_spkr)]
+        start_spkr = 0
+        while start_spkr < len(speakers):
+            # Choose the configuration to be used for the current session. 
+            cfgname = random.choices(cfgnames, weights=cfg_probs, k=1)[0]
+            cur_cfg = config['configurations'][cfgname]
 
-            # Pick the speakers to be included in the current session. 
-            for spkr in speakers[i : i + nspkrs_per_session]:
-                pop = dyn_corpus[spkr][:nutts_per_spkr]                    
-                rem = dyn_corpus[spkr][nutts_per_spkr:]
+            # Pick the speakers for this session. 
+            cur_nspkrs = random.choice(cur_cfg['speakers_per_session'])
+            cur_spkrs = speakers[start_spkr : start_spkr + cur_nspkrs]
+            start_spkr += cur_nspkrs
+
+            utterances_in_session = defaultdict(list)
+
+            for spkr in cur_spkrs:
+                # Determine the number of utteraces for the current speaker. 
+                cur_nutts = random.choice(cur_cfg['utterances_per_speaker'])
+
+                # Pick the utterances.
+                pop = dyn_corpus[spkr][:cur_nutts]
+                rem = dyn_corpus[spkr][cur_nutts:]
 
                 if len(rem) == 0:
                     dyn_corpus.pop(spkr)
@@ -55,6 +73,8 @@ def gen_session(corpus_spkrwise, tgtdir, nspkrs_per_session, nutts_per_spkr):
                 for i, utt in enumerate(pop):
                     utterances_in_session[i].append(utt)
 
+            # Convert defaultdict to a list of lists.
+            utterances_in_session = [utterances_in_session[k] for k in range(len(utterances_in_session))]
 
             # Try to avoid adjacent utterances being spoken by the same speaker. 
             utterances_in_session_reorg = copy.deepcopy(utterances_in_session[0])
@@ -73,64 +93,84 @@ def gen_session(corpus_spkrwise, tgtdir, nspkrs_per_session, nutts_per_spkr):
                             utterances_in_session_reorg += temp
                             break
 
-            ret.append(utterances_in_session_reorg)
+            # Pick the timing configurations. 
+            overlap_time_ratio = random.uniform(cur_cfg['overlap_time_ratio'][0], cur_cfg['overlap_time_ratio'][1])
+            sess, attr = give_timing(utterances_in_session_reorg, 
+                                     overlap_time_ratio=overlap_time_ratio, 
+                                     sil_prob=cur_cfg['silence_probability'], 
+                                     sil_dur=cur_cfg['silence_duration'])
+
+            ret.append({'utterances': sess, 'attr': attr})
 
     return ret
 
 
 
-def give_timing(sess_list, overlap_time_ratio=0.3, sil_prob=0.2, sil_dur=[0.3, 2.0]):
-    ret = []
+def give_timing(sess, overlap_time_ratio=0.3, sil_prob=0.2, sil_dur=[0.3, 2.0]):
+    time_marked_sess = copy.deepcopy(sess)
 
-    for sess in sess_list:
-        time_marked_sess = copy.deepcopy(sess)
+    # Calculate the total length and derive the overlap time budget. 
+    total_len = np.sum(np.array([utt['length_in_seconds'] for utt in time_marked_sess]))
+    total_overlap_time = total_len * overlap_time_ratio / (1 + overlap_time_ratio)
 
-        # Calculate the total length and derive the overlap time budget. 
-        total_len = np.sum(np.array([utt['length_in_seconds'] for utt in time_marked_sess]))
-        total_overlap_time = total_len * overlap_time_ratio / (1 + overlap_time_ratio)
+    # Determine where to do overlap. 
+    nutts = len(time_marked_sess)
+    to_overlap = bernoulli.rvs(1 - sil_prob, size=nutts - 1).astype(bool).tolist()
+    noverlaps = sum(to_overlap)
 
-        # Determine where to do overlap. 
-        nutts = len(time_marked_sess)
-        to_overlap = bernoulli.rvs(1 - sil_prob, size=nutts - 1).astype(bool).tolist()
-        noverlaps = sum(to_overlap)
+    # Distribute the budget to each utterance boundary with the "stick breaking" approach. 
+    probs = []
+    rem = 1
+    for i in range(noverlaps - 1):
+        p = random.betavariate(1, 5)
+        probs.append(rem * p)
+        rem *= (1 - p)
+    probs.append(rem)
+    random.shuffle(probs)
 
-        # Distribute the budget to each utterance boundary with the "stick breaking" approach. 
-        probs = []
-        rem = 1
-        for i in range(noverlaps - 1):
-            p = random.betavariate(1, 5)
-            probs.append(rem * p)
-            rem *= (1 - p)
-        probs.append(rem)
-        random.shuffle(probs)
+    idx = -1
+    overlap_times = [0.0]
+    for b in to_overlap:
+        if b:
+            idx += 1
+            overlap_times.append(probs[idx] * total_overlap_time)
+        else:
+            overlap_times.append(-np.random.uniform(low=sil_dur[0], high=sil_dur[1]))
 
-        idx = -1
-        overlap_times = [0.0]
-        for b in to_overlap:
-            if b:
-                idx += 1
-                overlap_times.append(probs[idx] * total_overlap_time)
-            else:
-                overlap_times.append(-np.random.uniform(low=sil_dur[0], high=sil_dur[1]))
+    # Get all speakers. 
+    speakers = set(utt['speaker_id'] for utt in time_marked_sess)        
 
-        # Get all speakers. 
-        speakers = set(utt['speaker_id'] for utt in time_marked_sess)        
+    # Determine the offset values while ensuring that there is no overlap between multiple utterances spoken by the same person. 
+    offset = 0
+    last_utt_end = {spkr: 0.0 for spkr in speakers}
+    last_utt_end_times = sorted(list(last_utt_end.values()), reverse=True)  # all zero (of course!)
+    actual_overlap_time = 0
+    for utt, ot in zip(time_marked_sess, overlap_times):
+        spkr = utt['speaker_id']
 
-        # Determine the offset values while ensuring that there is no overlap between multiple utterances spoken by the same person. 
-        offset = 0
-        last_utt_end = {spkr: 0.0 for spkr in speakers}
-        for utt, ot in zip(time_marked_sess, overlap_times):
-            spkr = utt['speaker_id']
+        if len(last_utt_end_times) > 1:
+            # second term for ensuring same speaker's utterances do not overlap. 
+            # third term for ensuring the maximum number of overlaps is two. 
+            ot = min(ot, offset - last_utt_end[spkr], offset - last_utt_end_times[1])
+        else:
             ot = min(ot, offset - last_utt_end[spkr])
-            offset -= ot
-            utt['offset'] = offset
-            offset += utt['length_in_seconds']
 
-            last_utt_end[spkr] = offset
+        offset -= ot
+        actual_overlap_time += max(ot, 0)
+        utt['offset'] = offset
+        offset += utt['length_in_seconds']
 
-        ret.append(time_marked_sess)
+        last_utt_end[spkr] = offset
 
-    return ret
+        last_utt_end_times = sorted(list(last_utt_end.values()), reverse=True)
+        offset = last_utt_end_times[0]
+
+    actual_overlap_time_ratio = actual_overlap_time / (total_len - actual_overlap_time)
+
+    attr = {'target_overlap_time_ratio': overlap_time_ratio, 
+            'actual_overlap_time_ratio': actual_overlap_time_ratio}
+
+    return time_marked_sess, attr
 
 
 
@@ -144,30 +184,36 @@ def main(args):
     with open(args.inputfile) as f:
         corpus = json.load(f)
 
+    # Load the dynamics file. 
+    with open(args.config) as f:
+        config = json.load(f)
+
     # Reorganize the data by speakers. 
     corpus_spkrwise = defaultdict(list)
     for utt in corpus:
         corpus_spkrwise[utt['speaker_id']].append(utt)
 
     # Group uterances to form sessions. 
-    sess_list = gen_session(corpus_spkrwise, args.targetdir, args.speakers, args.utterances_per_speaker)
+    sess_list = gen_session(corpus_spkrwise, args.targetdir, config)
 
-    # For each session, give a start time (i.e., offset) to each utterance. 
-    sess_list = give_timing(sess_list, 
-                            overlap_time_ratio=args.overlap_time_ratio, 
-                            sil_prob=args.silence_probability, 
-                            sil_dur=args.silence_duration)
+    # # For each session, give a start time (i.e., offset) to each utterance. 
+    # sess_list = give_timing(sess_list, 
+    #                         overlap_time_ratio=args.overlap_time_ratio, 
+    #                         sil_prob=args.silence_probability, 
+    #                         sil_dur=args.silence_duration)
 
     # Give an output file name to each session. 
     output = []
     ndigits = len(str(len(sess_list)))
     ptrn = f'[:0{ndigits}d].wav'.replace('[', '{').replace(']', '}')
     for i, sess in enumerate(sess_list):
-        speakers = sorted(list(set([utt['speaker_id'] for utt in sess])))
+        speakers = sorted(list(set([utt['speaker_id'] for utt in sess['utterances']])))
         sess_out = os.path.join(args.targetdir, ptrn.format(i))
-        dic = {'inputs': sess, 
+        dic = {'inputs': sess['utterances'], 
                'output': sess_out, 
-               'speakers': speakers}
+               'speakers': speakers, 
+               'target_overlap_time_ratio': sess['attr']['target_overlap_time_ratio'], 
+               'actual_overlap_time_ratio': sess['attr']['actual_overlap_time_ratio']}
         output.append(dic)
 
     # Generate the output JSON file. 
@@ -184,27 +230,16 @@ def make_argparse():
     parser = argparse.ArgumentParser(description='Create a JSON file for meeting-ish audio simulation.', 
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    io_args = parser.add_argument_group('IO options')
-    io_args.add_argument('--inputfile', metavar='<file>', required=True,
-                         help='Input corpus file in JSON.')
-    io_args.add_argument('--outputfile', metavar='<file>', required=True,
-                         help='Output mixing file in JSON.')
-    io_args.add_argument('--targetdir', metavar='<dir>', required=True,
-                         help='Target directory name.')
-
-    sim_args = parser.add_argument_group('Simulation options')
-    sim_args.add_argument('--speakers', type=int, metavar='<int>', default=3, 
-                          help='Number of speakers per session.')
-    sim_args.add_argument('--utterances_per_speaker', type=int, metavar='<int>', default=3, 
-                          help='Number of utterances per session/speaker.')
-    sim_args.add_argument('--overlap_time_ratio', type=float, metavar='<float>', default=0.2, 
-                          help='Target overlap time ratio as defined as overlap-time/session-time.')
-    sim_args.add_argument('--silence_probability', type=float, metavar='<float>', default=0.2, 
-                          help='Probability with which silence happens between neighboring utterances.')
-    sim_args.add_argument('--silence_duration', nargs=2, type=float, metavar=('<min-sil>', '<max-sil>'), default=[0.3, 2.0], 
-                          help='Duration of inter-utterance silence.')
-    sim_args.add_argument('--random_seed', metavar='N', type=int,
-                          help='Seed for random number generators. The current system time is used when this option is not used.')
+    parser.add_argument('--inputfile', metavar='<file>', required=True,
+                        help='Input corpus file in JSON.')
+    parser.add_argument('--outputfile', metavar='<file>', required=True,
+                        help='Output mixing file in JSON.')
+    parser.add_argument('--targetdir', metavar='<dir>', required=True,
+                        help='Target directory name.')
+    parser.add_argument('--config', metavar='<file>', required=True,
+                        help='Speaker dynamics configuration file.')
+    parser.add_argument('--random_seed', metavar='N', type=int,
+                        help='Seed for random number generators. The current system time is used when this option is not used.')
 
     return parser
 

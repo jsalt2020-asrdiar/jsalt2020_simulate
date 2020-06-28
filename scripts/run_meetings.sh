@@ -13,7 +13,7 @@ function print_usage_and_exit {
     echo "    ''"
     echo "    < $CMD >"
     echo ""
-    echo "    Usage: $CMD [--split N] [--vad] [--help] dest-dir set"
+    echo "    Usage: $CMD [--split N] [--roomcfg FILE] [--dyncfg FILE] [--vad] [--help] dest-dir set"
     echo ""
     echo "    Description: Preprocess the original LibriSpeech data."
     echo ""
@@ -22,13 +22,12 @@ function print_usage_and_exit {
     echo "        set: {train|dev|eval}, subset to process."
     echo ""
     echo "    Options: "
-    echo "        --split N: Split the data set into N subsets for parallel processing. N defaults to 32."    
-    echo "        --cfg FILE  : Room acoustics configuration file. FILE defaults to <repo-root>/configs/meeting_reverb.json."
-    echo "        --overlap X : Overlap time ratio, which defaults to 0.3."
-    echo "        --utt-per-spkr N : Number of utterances per speaker in each session, which defaults to 3."
-    echo "        --spkr-per-sess N : Number of speakers per session, which defaults to 3."
-    echo "        --vad       : Use VAD-segmented signals."
-    echo "        --help      : Show this message."
+    echo "        --split N                  : Split the data set into N subsets for parallel processing. N defaults to 32."    
+    echo "        --roomcfg FILE             : Room acoustics configuration file. FILE defaults to <repo-root>/configs/common/meeting_reverb.json."
+    echo "        --dyncfg FILE              : Room acoustics configuration file. FILE defaults to <repo-root>/configs/common/meeting_dynamics.json."
+    echo "        --vad                      : Use VAD-segmented signals."
+    echo "        --save_channels_separately : Save each output channel separately."
+    echo "        --help                     : Show this message."
     echo "    ''"
     echo ""
     exit 1
@@ -52,24 +51,19 @@ do
 
     if [ "$1" == --help ] ; then
         print_usage_and_exit
-    elif [ "$1" == --cfg ]; then
+    elif [ "$1" == --roomcfg ]; then
         shift
-        cfgfile=$1
+        roomcfg=$1
         shift
-    elif [ "$1" == --overlap ]; then
+    elif [ "$1" == --dyncfg ]; then
         shift
-        overlap_time_ratio=$1
-        shift
-    elif [ "$1" == --utt-per-spkr ]; then
-        shift
-        utterances_per_speaker=$1
-        shift
-    elif [ "$1" == --spkr-per-sess ]; then
-        shift
-        speakers_per_session=$1
+        dyncfg=$1
         shift
     elif [ "$1" == --vad ]; then
         vad=
+        shift
+    elif [ "$1" == --save_channels_separately ]; then
+        save_channels_separately=
         shift
     elif [ "$1" == --split ]; then
         shift
@@ -126,18 +120,11 @@ else
 fi
 tgtroot=$EXPROOT/data/$1
 
-# Hyper-parameters
-if [ ! -v overlap_time_ratio ]; then
-    overlap_time_ratio=0.3
+if [ ! -v roomcfg ]; then
+    roomcfg=$ROOTDIR/configs/common/meeting_reverb.json
 fi
-if [ ! -v utterances_per_speaker ]; then
-    utterances_per_speaker=3
-fi
-if [ ! -v speakers_per_session ]; then
-    speakers_per_session=3
-fi
-if [ ! -v cfgfile ]; then
-    cfgfile=$ROOTDIR/configs/meeting_reverb.json
+if [ ! -v dyncfg ]; then
+    dyncfg=$ROOTDIR/configs/common/meeting_dynamics.json
 fi
 
 # List the source files. 
@@ -164,13 +151,18 @@ python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/${set}.${j}.json;
 # Generate mixture specs. 
 tgtdir=$tgtroot/wav
 specjson=$tgtroot/mixspec.json
-python $mixspec --inputfile $datajson --outputfile $specjson --targetdir $tgtdir --random_seed 0 --speakers $speakers_per_session --utterances_per_speaker $utterances_per_speaker --overlap_time_ratio $overlap_time_ratio
+python $mixspec --inputfile $datajson --outputfile $specjson --targetdir $tgtdir --random_seed 0 --config $dyncfg
 
 # Split $tgtroot/mixspec.json into several smaller json files: $splitdir/mixspec.JOB.json
 python $splitjson --inputfile $specjson --number_splits $nj --outputdir $splitdir
 
 # Generate mixed audio files. 
 mixlog=$tgtroot/mixlog.json
+if [ -v save_channels_separately ]; then
+    opts='--save_each_channel_in_onefile'
+else
+    opts=''
+fi
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
-    python $mixer --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json --mixers_configfile $cfgfile
+    python $mixer $opts --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json --mixers_configfile $roomcfg
 python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/mixlog.${j}.json; done) > $mixlog
