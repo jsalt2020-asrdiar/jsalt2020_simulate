@@ -1,5 +1,5 @@
 # jsalt2020-simulate
-This repository provides a set of tools for generating training data for speech enhancement and separation models. 
+This repository provides a set of tools for generating training data for speech enhancement, speech separation, multi-talker speech recognition, and speaker diarization by simulation. Simulated development and evaluation sets can also be created. 
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ source ./path.sh  # This is created by install.sh.
     export EXPROOT=<your-data-dir>
     ```
 
-3. Download train-clean-100.tar.gz and train-clean360.tar.gz of LibriSpeech from http://www.openslr.org/12/, untar them, and put the generated directories, train-clean-100 and train-clean-360, under a single directory. This can be done by running the following script. 
+3. Download and untar the LibriSpeech corpus from http://www.openslr.org/12/, untar them, which can be performed with the following script. 
     ```
     ./download.sh
     ```
