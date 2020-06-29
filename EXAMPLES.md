@@ -1,6 +1,10 @@
 # Use Cases
 The scripts under *scripts* directory print usage messages with *--help* option. They support various options, including *--split* option to control the degree of parallelism.
 
+## General notes
+- **It is advised that you do simulation on the test set first to see how the resultant audio files would look like before performing simulation on the training set, which usually takes much longer than doing so on the test set.**
+- It is likely that the optimal simulation configurations differ across tasks. Therefore, too much emphasis is not put at this moment on cross-site data reproducibility, although it is currently being in the works. 
+
 
 ## 1. Meeting-style audio simulation
 
