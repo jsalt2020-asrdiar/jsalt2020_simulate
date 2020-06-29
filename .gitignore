@@ -16,3 +16,5 @@ temp*
 # Artifacts #
 path.sh
 external_tools/
+
+configs/msft/
