@@ -76,7 +76,6 @@ class SphericalNoiseGenerator(object):
         return n
 
 
-
     def _get_hoth_mag(self):
         # Hoth Noise Specifications
         # For details, see p. 80 of

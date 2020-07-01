@@ -190,5 +190,5 @@ if [ -v save_anechoic ]; then
     opts="$opts --save_anechoic --save_rir"
 fi
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
-    python $mixer $opts --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --mixers_configfile $cfgfile --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json
+    python $mixer $opts --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed JOB --mixers_configfile $cfgfile --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json
 python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/mixlog.${j}.json; done) > $mixlog
