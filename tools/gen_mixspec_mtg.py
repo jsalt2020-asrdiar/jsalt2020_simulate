@@ -98,7 +98,8 @@ def gen_session(corpus_spkrwise, tgtdir, config):
             sess, attr = give_timing(utterances_in_session_reorg, 
                                      overlap_time_ratio=overlap_time_ratio, 
                                      sil_prob=cur_cfg['silence_probability'], 
-                                     sil_dur=cur_cfg['silence_duration'])
+                                     sil_dur=cur_cfg['silence_duration'], 
+                                     allow_3fold_overlap=cur_cfg['allow_3fold_overlap'])
 
             ret.append({'utterances': sess, 'attr': attr})
 
@@ -106,7 +107,7 @@ def gen_session(corpus_spkrwise, tgtdir, config):
 
 
 
-def give_timing(sess, overlap_time_ratio=0.3, sil_prob=0.2, sil_dur=[0.3, 2.0]):
+def give_timing(sess, overlap_time_ratio=0.3, sil_prob=0.2, sil_dur=[0.3, 2.0], allow_3fold_overlap=False):
     time_marked_sess = copy.deepcopy(sess)
 
     # Calculate the total length and derive the overlap time budget. 
@@ -148,7 +149,7 @@ def give_timing(sess, overlap_time_ratio=0.3, sil_prob=0.2, sil_dur=[0.3, 2.0]):
     for utt, ot in zip(time_marked_sess, overlap_times):
         spkr = utt['speaker_id']
 
-        if len(last_utt_end_times) > 1:
+        if len(last_utt_end_times) > 1 and (not allow_3fold_overlap): 
             # second term for ensuring same speaker's utterances do not overlap. 
             # third term for ensuring the maximum number of overlaps is two. 
             ot = min(ot, offset - last_utt_end[spkr], offset - last_utt_end_times[1])
@@ -195,12 +196,6 @@ def main(args):
 
     # Group uterances to form sessions. 
     sess_list = gen_session(corpus_spkrwise, args.targetdir, config)
-
-    # # For each session, give a start time (i.e., offset) to each utterance. 
-    # sess_list = give_timing(sess_list, 
-    #                         overlap_time_ratio=args.overlap_time_ratio, 
-    #                         sil_prob=args.silence_probability, 
-    #                         sil_dur=args.silence_duration)
 
     # Give an output file name to each session. 
     output = []
