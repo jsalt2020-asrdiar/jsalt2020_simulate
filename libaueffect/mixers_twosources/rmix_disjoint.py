@@ -102,17 +102,12 @@ class ReverbMixDisjointNoise(object):
 
         # Filter and mix the signals. 
         target_amp = np.random.uniform(self._min_amplitude, self._max_amplitude)
-        ret = self._room_simulator(nspeakers=2, info_as_display_style=True)
-        if len(ret) == 2:
-            h, h_info = ret
-            micarray = None
-        else:
-            h, h_info, micarray = ret
+        h, h_info = self._room_simulator(nspeakers=2, info_as_display_style=True)
         z, y = libaueffect.reverb_mix(x, h, amp=target_amp, sample_rate=samplerate, cancel_delay=self._no_delay, second_arg_is_filename=False)
 
         # Generage noise. 
         if self._noise_generator is not None:
-            n = self._noise_generator(nsamples=target_len, micarray=micarray)
+            n = self._noise_generator(nsamples=target_len)
             if len(inputs) > 0:
                 n, snr = libaueffect.signals.scale_noise_to_random_snr(n, z, self._min_snr, self._max_snr)
             else:
