@@ -47,6 +47,3 @@ See [TODO.md](TODO.md).
 
 Please report problems with the GitHub issues of this repository. For discussions, please post your feedback to the workshop's Slack channel. 
 
-## References
-
-[1] Z. Chen, T. Yoshioka, L. Lu, T. Zhou, Z. Meng, Y. Luo, J. Wu, X. Xiao, J. Li, "Continuous Speech Separation: Dataset and Analysis," ICASSP 2020 - 2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Barcelona, Spain, 2020, pp. 7284-7288, doi: 10.1109/ICASSP40776.2020.9053426.
