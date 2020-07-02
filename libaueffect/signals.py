@@ -36,7 +36,7 @@ def remove_delay_from_rirs(h):
     return h
 
 
-def reverb_mix(x, rirfiles, amp=1.0, sample_rate=16000, cancel_delay=False, second_arg_is_filename=True):
+def reverb_mix(x, rirfiles, sample_rate=16000, cancel_delay=False, second_arg_is_filename=True):
     if second_arg_is_filename:
         h = load_random_rirs(rirfiles, nspeakers=2, sample_rate=sample_rate)
     else:
@@ -45,7 +45,8 @@ def reverb_mix(x, rirfiles, amp=1.0, sample_rate=16000, cancel_delay=False, seco
     nchans = h[0].shape[0]
         
     # Compensate for the delay.
-    h = remove_delay_from_rirs(h)
+    if cancel_delay:
+        h = remove_delay_from_rirs(h)
 
     # Filter the source signals. 
     nsrcs = x.shape[0]
@@ -57,14 +58,14 @@ def reverb_mix(x, rirfiles, amp=1.0, sample_rate=16000, cancel_delay=False, seco
     # Mix the signals together. 
     z = np.sum(y, axis=0)
 
-    # Normalize the signal.
-    max_amplitude = max( [np.amax(np.absolute(z)), np.amax(np.absolute(y))] )
-    if max_amplitude > 0:
-        scale = (32767/32768) / max_amplitude * amp
-        y *= scale
-        z *= scale
+    # # Normalize the signal.
+    # max_amplitude = max( [np.amax(np.absolute(z)), np.amax(np.absolute(y))] )
+    # if max_amplitude > 0:
+    #     scale = (32767/32768) / max_amplitude * amp
+    #     y *= scale
+    #     z *= scale
 
-    return z, y
+    return z, y, h
 
 
 

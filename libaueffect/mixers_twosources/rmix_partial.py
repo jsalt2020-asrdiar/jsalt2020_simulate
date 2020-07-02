@@ -51,7 +51,7 @@ class ReverbMixPartialNoise(object):
                 self._noise_generator = generator_pool[id]
 
 
-    def __call__(self, inputs, samplerate, output_filename, input_filenames, save_rir=False, save_anechoic=False, save_as_one_file=False):
+    def __call__(self, inputs, samplerate, output_filename, input_filenames, to_save=('image', 'noise'), save_as_one_file=False):
         print(output_filename)
         for i, f in enumerate(input_filenames):
             if i == 0:
@@ -107,7 +107,7 @@ class ReverbMixPartialNoise(object):
         # Filter and mix the signals. 
         target_amp = np.random.uniform(self._min_amplitude, self._max_amplitude)
         h, h_info = self._room_simulator(nspeakers=2, info_as_display_style=True)
-        z, y = libaueffect.reverb_mix(x, h, amp=target_amp, sample_rate=samplerate, cancel_delay=self._no_delay, second_arg_is_filename=False)
+        z, y, h = libaueffect.reverb_mix(x, h, sample_rate=samplerate, cancel_delay=self._no_delay, second_arg_is_filename=False)
 
         # Generage noise. 
         if self._noise_generator is not None:
@@ -120,16 +120,18 @@ class ReverbMixPartialNoise(object):
             # Add the noise and normalize the resultant signal. 
             u = z + n
 
-            # Normalize the generated signal. 
-            max_amplitude = np.amax(np.absolute(u))
-            scale = (32767/32768) / max_amplitude * target_amp
-
-            u *= scale
-            y *= scale
-            n *= scale
-
         else:
-            u = z
+            u = np.copy(z)
+
+        # Normalize the generated signal. 
+        max_amplitude = np.amax(np.absolute(u))
+        scale = (32767/32768) / max_amplitude * target_amp
+
+        u *= scale
+        y *= scale
+        n *= scale
+        for i in range(len(h)):
+            h[i] *= scale
 
         # description of the mixing process
         params = [('mixer', self.__class__.__name__),
@@ -141,28 +143,30 @@ class ReverbMixPartialNoise(object):
         if self._noise_generator is not None:
             params.append( ('snr', snr) )
 
-        # Save the reverberant source signals. 
         path, ext = os.path.splitext(output_filename)        
-        for i in range(len(y)):
-            outfile = '{}_s{}{}'.format(path, i, ext)            
-            libaueffect.write_wav(y[i], outfile, sample_rate=samplerate, avoid_clipping=False, save_as_one_file=save_as_one_file)
-            params.append(('source{}'.format(i), outfile))
+
+        # Save the reverberant source signals. 
+        if 'image' in to_save:
+            for i in range(len(y)):
+                outfile = '{}_s{}{}'.format(path, i, ext)            
+                libaueffect.write_wav(y[i], outfile, sample_rate=samplerate, avoid_clipping=False, save_as_one_file=save_as_one_file)
+                params.append(('source{}'.format(i), outfile))
 
         # Save the noise. 
-        if self._noise_generator is not None:
+        if 'noise' in to_save and self._noise_generator is not None:
             outfile = '{}_s{}{}'.format(path, len(y), ext)            
             libaueffect.write_wav(n, outfile, sample_rate=samplerate, avoid_clipping=False, save_as_one_file=save_as_one_file)
             params.append(('noise', outfile))
 
         # Save the RIRs.
-        if save_rir:
+        if 'rir' in to_save: 
             for i in range(len(h)):
                 outfile = '{}_r{}{}'.format(path, i, ext)            
                 libaueffect.write_wav(h[i], outfile, sample_rate=samplerate, avoid_clipping=False, save_as_one_file=save_as_one_file)
                 params.append(('rir{}'.format(i), outfile))
 
         # Save the anechoic source signals. 
-        if save_anechoic:
+        if 'source' in to_save:
             path, ext = os.path.splitext(output_filename)        
             for i in range(len(x)):
                 outfile = '{}_a{}{}'.format(path, i, ext)            
