@@ -28,8 +28,8 @@ function print_usage_and_exit {
     echo "        --subsample X              : Use X*100 % of the files."
     echo "        --onespkr X                : Probability with which a purely single speaker sample is generated."
     echo "        --vad                      : Use VAD-segmented signals."
+    echo "        --save_image               : Save source images instead of anechoic signals and RIRs."
     echo "        --save_channels_separately : Save each output channel separately."
-    echo "        --save_anechoic            : Save anechoic signals and RIRs."
     echo "        --help                     : Show this message."
     echo "    ''"
     echo ""
@@ -60,8 +60,8 @@ do
     elif [ "$1" == --save_channels_separately ]; then
         save_channels_separately=
         shift
-    elif [ "$1" == --save_anechoic ]; then
-        save_anechoic=
+    elif [ "$1" == --save_image ]; then
+        save_image=
         shift
     elif [ "$1" == --split ]; then
         shift
@@ -186,9 +186,9 @@ if [ -v save_channels_separately ]; then
 else
     opts=''
 fi
-if [ -v save_anechoic ]; then
-    opts="$opts --save_anechoic --save_rir"
+if [ -v save_image ]; then
+    opts="$opts --save_image"
 fi
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
-    python $mixer $opts --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed 1000 --mixers_configfile $cfgfile --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json
+    python $mixer $opts --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed JOB --mixers_configfile $cfgfile --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json
 python $mergejson $(for j in $(seq ${nj}); do echo ${splitdir}/mixlog.${j}.json; done) > $mixlog

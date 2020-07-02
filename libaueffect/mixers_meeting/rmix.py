@@ -42,12 +42,7 @@ class ReverbMixMeeting(object):
         nspkrs = len(spkrs)
 
         # Generate RIRs. 
-        ret = self._room_simulator(nspeakers=nspkrs, info_as_display_style=True)
-        if len(ret) == 2:
-            rir, rir_info = ret
-            micarray = None
-        else:
-            rir, rir_info, micarray = ret
+        rir, rir_info = self._room_simulator(nspeakers=nspkrs, info_as_display_style=True)
 
         spkr2rir = {spkr: i for i, spkr in enumerate(spkrs)}
         rir_info.append( ('speakers', spkrs) )
@@ -73,7 +68,7 @@ class ReverbMixMeeting(object):
        
         # Generage noise. 
         if self._noise_generator is not None:
-            n = self._noise_generator(nsamples=target_len, micarray=micarray)
+            n = self._noise_generator(nsamples=target_len)
             n, snr = libaueffect.signals.scale_noise_to_random_snr(n, y, self._min_snr, self._max_snr)
 
             # Add the noise and normalize the resultant signal. 

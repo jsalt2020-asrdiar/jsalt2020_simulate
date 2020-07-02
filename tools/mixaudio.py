@@ -28,6 +28,10 @@ def main(args):
     os.makedirs(os.path.dirname(os.path.abspath(args.outlist)), exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(args.log)), exist_ok=True)
 
+    if args.save_image:
+        to_save = ('image', 'noise')
+    else:
+        to_save = ('source', 'rir', 'noise')
 
     with open(args.log, 'w') as log_stream:
         print('[', file=log_stream)
@@ -61,8 +65,7 @@ def main(args):
                              sr, 
                              output_filename=outfile, 
                              input_filenames=infiles, 
-                             save_anechoic=args.save_anechoic, 
-                             save_rir=args.save_rir, 
+                             to_save=to_save, 
                              save_as_one_file=(not args.save_each_channel_in_onefile))
 
                 print(os.path.abspath(outfile), file=outfile_stream)
@@ -119,10 +122,8 @@ def make_argparse():
     mix_args = parser.add_argument_group('Mixer options')
     mix_args.add_argument('--mixers_configfile', metavar='FILE', 
                           help='Config file for building an array of mixers.')
-    mix_args.add_argument('--save_anechoic', action='store_true', 
-                          help='Save both anechoic and reverberated source signals.')
-    mix_args.add_argument('--save_rir', action='store_true', 
-                          help='Save room impulse responses.')
+    mix_args.add_argument('--save_image', action='store_true', 
+                          help='Save source images instead of anechoic signals and RIRs.')
 
     return parser
 

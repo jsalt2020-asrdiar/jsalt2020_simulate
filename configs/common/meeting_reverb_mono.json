@@ -28,8 +28,7 @@
       "opts": {
         "sound_velocity": 340,
         "fs": 16000,
-        "micarray": "mono",
-        "spectral_shape": "hoth"
+        "micarray": "mono"
       }
     }
   ],
