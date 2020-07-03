@@ -28,6 +28,10 @@ def main(args):
     os.makedirs(os.path.dirname(os.path.abspath(args.outlist)), exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(args.log)), exist_ok=True)
 
+    if args.save_image:
+        to_return = ('image', 'noise')
+    else:
+        to_return = ('source', 'rir', 'noise')
 
     with open(args.log, 'w') as log_stream:
         print('[', file=log_stream)
@@ -58,14 +62,24 @@ def main(args):
 
                 # Mix the signals. 
                 mixer = mixers[np.random.choice(nmixers, p=priors)]
-                y, p = mixer(x, offsets, spkr_labs)
+                y, p, interm = mixer(x, offsets, spkr_labs, to_return=to_return)
 
+                # Save the output signal. 
                 print(os.path.abspath(outfile), file=outfile_stream)
                 libaueffect.write_wav(y, 
                                       outfile, 
                                       sample_rate=sr, 
                                       avoid_clipping=False, 
                                       save_as_one_file=(not args.save_each_channel_in_onefile))
+
+                # Save the intermediate signals. 
+                for dt in interm.values():
+                    for key in dt:
+                        filename = f"{os.path.splitext(outfile)[0]}_{key}.wav"
+                        libaueffect.write_wav(dt[key], 
+                                              filename, 
+                                              avoid_clipping=False, 
+                                              save_as_one_file=(not args.save_each_channel_in_onefile))
 
                 input_info = [{'path': os.path.abspath(f['path']), 
                                'speaker_id': f['speaker_id'], 
@@ -118,6 +132,8 @@ def make_argparse():
                            help='Unbias the DC offset.')
     proc_args.add_argument('--save_each_channel_in_onefile', action='store_true', 
                            help='Save each channel in a separate file.')
+    proc_args.add_argument('--save_image', action='store_true', 
+                           help='Save source images instead of anechoic signals and RIRs.')
 
     mix_args = parser.add_argument_group('Mixer options')
     mix_args.add_argument('--mixers_configfile', metavar='FILE', 

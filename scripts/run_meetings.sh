@@ -13,7 +13,7 @@ function print_usage_and_exit {
     echo "    ''"
     echo "    < $CMD >"
     echo ""
-    echo "    Usage: $CMD [--split N] [--roomcfg FILE] [--dyncfg FILE] [--vad] [--help] dest-dir set"
+    echo "    Usage: $CMD [--split N] [--roomcfg FILE] [--dyncfg FILE] [--vad] [--save_image] [--save_channels_separately] [--help] dest-dir set"
     echo ""
     echo "    Description: Preprocess the original LibriSpeech data."
     echo ""
@@ -25,7 +25,8 @@ function print_usage_and_exit {
     echo "        --split N                  : Split the data set into N subsets for parallel processing. N defaults to 32."    
     echo "        --roomcfg FILE             : Room acoustics configuration file. FILE defaults to <repo-root>/configs/common/meeting_reverb.json."
     echo "        --dyncfg FILE              : Room acoustics configuration file. FILE defaults to <repo-root>/configs/common/meeting_dynamics.json."
-    echo "        --vad                      : Use VAD-segmented signals."
+    echo "        --vad                      : Use VAD-segmented signals. Not recommended."
+    echo "        --save_image               : Save source images instead of anechoic signals and RIRs."
     echo "        --save_channels_separately : Save each output channel separately."
     echo "        --help                     : Show this message."
     echo "    ''"
@@ -58,6 +59,9 @@ do
     elif [ "$1" == --dyncfg ]; then
         shift
         dyncfg=$1
+        shift
+    elif [ "$1" == --save_image ]; then
+        save_image=
         shift
     elif [ "$1" == --vad ]; then
         vad=
@@ -162,6 +166,9 @@ if [ -v save_channels_separately ]; then
     opts='--save_each_channel_in_onefile'
 else
     opts=''
+fi
+if [ -v save_image ]; then
+    opts="$opts --save_image"
 fi
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
     python $mixer $opts --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed JOB --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json --mixers_configfile $roomcfg

@@ -36,7 +36,7 @@ source ./path.sh  # This is created by install.sh.
 
 ## Examples
 
-See [EXAMPLES.md](EXAMPLES.md).
+See [EXAMPLES.md](docs/EXAMPLES.md).
 
 ## Plan
 
