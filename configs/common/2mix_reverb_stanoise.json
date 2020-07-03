@@ -42,6 +42,8 @@
         "min_sir": -5.0,
         "max_sir": 5.0,
         "max_mixlen": 10.0,
+        "max_amplitude": 0.3, 
+        "min_amplitude": 0.1, 
         "room_simulator": "id=room_simulator1",
         "noise_generator": "id=noise_generator1"
       }
@@ -55,6 +57,8 @@
         "max_sir": 5.0,
         "max_mixlen": 10.0,
         "min_overlap": 0.4,
+        "max_amplitude": 0.3, 
+        "min_amplitude": 0.1, 
         "room_simulator": "id=room_simulator1",
         "noise_generator": "id=noise_generator1"
       }
@@ -69,6 +73,8 @@
         "max_mixlen": 10.0,
         "min_overlap": 0.4,
         "max_overlap": 0.8,
+        "max_amplitude": 0.3, 
+        "min_amplitude": 0.1, 
         "room_simulator": "id=room_simulator1",
         "noise_generator": "id=noise_generator1"
       }
@@ -81,6 +87,8 @@
         "max_mixlen": 10.0,
         "max_silence": 1.5,
         "min_sillen":  2.0, 
+        "max_amplitude": 0.3, 
+        "min_amplitude": 0.1, 
         "room_simulator": "id=room_simulator1",
         "noise_generator": "id=noise_generator1"
       }
