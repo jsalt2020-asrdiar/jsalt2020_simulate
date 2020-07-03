@@ -65,5 +65,5 @@ The meeting simulation script, run_meeting.sh, can also be used to mix a few utt
 ./scripts/run_meetings.sh --dyncfg ./configs/common/uttmix_dynamics.json SimLibriCSS-short-dev dev
 ./scripts/run_meetings.sh --dyncfg ./configs/common/uttmix_dynamics.json SimLibriCSS-short-test test
 ```
-Unlike run.sh, this does not truncate the original LibriSpeech utterances. Therefore, the generated data can also be used for ASR training. 
+Unlike run.sh, this does not truncate the original LibriSpeech utterances. Therefore, the generated data can also be used for ASR training. Also, note that this mixes utterances of up to three speakers. If you want to generate only 1- or 2-speaker signals, modify the "speakers_per_session" value in uttmix_dynamics.json. 
 
