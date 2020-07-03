@@ -26,6 +26,7 @@ function print_usage_and_exit {
     echo "        --roomcfg FILE             : Room acoustics configuration file. FILE defaults to <repo-root>/configs/common/meeting_reverb.json."
     echo "        --dyncfg FILE              : Room acoustics configuration file. FILE defaults to <repo-root>/configs/common/meeting_dynamics.json."
     echo "        --vad                      : Use VAD-segmented signals."
+    echo "        --save_image               : Save source images instead of anechoic signals and RIRs."
     echo "        --save_channels_separately : Save each output channel separately."
     echo "        --help                     : Show this message."
     echo "    ''"
@@ -58,6 +59,9 @@ do
     elif [ "$1" == --dyncfg ]; then
         shift
         dyncfg=$1
+        shift
+    elif [ "$1" == --save_image ]; then
+        save_image=
         shift
     elif [ "$1" == --vad ]; then
         vad=
@@ -162,6 +166,9 @@ if [ -v save_channels_separately ]; then
     opts='--save_each_channel_in_onefile'
 else
     opts=''
+fi
+if [ -v save_image ]; then
+    opts="$opts --save_image"
 fi
 ${gen_cmd} JOB=1:${nj} ${splitdir}/log/mixlog.JOB.log \
     python $mixer $opts --iolist ${splitdir}/mixspec.JOB.json --cancel_dcoffset --random_seed JOB --sample_rate 16000 --log ${splitdir}/mixlog.JOB.json --mixers_configfile $roomcfg
