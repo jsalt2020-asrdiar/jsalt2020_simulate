@@ -27,6 +27,7 @@ function print_usage_and_exit {
     echo "        --dyncfg FILE              : Room acoustics configuration file. FILE defaults to <repo-root>/configs/common/meeting_dynamics.json."
     echo "        --vad                      : Use VAD-segmented signals. Not recommended."
     echo "        --save_image               : Save source images instead of anechoic signals and RIRs."
+    echo "        --mini                     : Generate a mini training set"
     echo "        --save_channels_separately : Save each output channel separately."
     echo "        --help                     : Show this message."
     echo "    ''"
@@ -72,6 +73,9 @@ do
     elif [ "$1" == --split ]; then
         shift
         nj=$1
+        shift
+    elif [ "$1" == --mini ]; then
+        mini=
         shift
     else
         echo ""
@@ -134,6 +138,12 @@ fi
 # List the source files. 
 datalist=$tgtroot/${set}.list
 python $gen_filelist --srcdir $srcdir --outlist $datalist
+
+if [ -v mini ] && [ ${set}=="train" ]; then
+    echo "Using mini training set"
+    mv ${datalist} ${datalist}.full
+    sort ${datalist}.full | tail --line=5000 > ${datalist}
+fi
 
 # Split datalist for parallel processing
 splitdir=${tgtroot}/split${nj}

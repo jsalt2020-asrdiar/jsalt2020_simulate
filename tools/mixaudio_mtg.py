@@ -31,7 +31,7 @@ def main(args):
     if args.save_image:
         to_return = ('image', 'noise')
     else:
-        to_return = ('source', 'rir', 'noise')
+        to_return = ('segment_image', 'rir', 'noise')
 
     with open(args.log, 'w') as log_stream:
         print('[', file=log_stream)
@@ -65,12 +65,13 @@ def main(args):
                 y, p, interm = mixer(x, offsets, spkr_labs, to_return=to_return)
 
                 # Save the output signal. 
-                print(os.path.abspath(outfile), file=outfile_stream)
-                libaueffect.write_wav(y, 
-                                      outfile, 
-                                      sample_rate=sr, 
-                                      avoid_clipping=False, 
-                                      save_as_one_file=(not args.save_each_channel_in_onefile))
+                # Chenda: here we do not need the mixture signal, which be created with the image speech in the training
+                # print(os.path.abspath(outfile), file=outfile_stream)
+                # libaueffect.write_wav(y, 
+                #                       outfile, 
+                #                       sample_rate=sr, 
+                #                       avoid_clipping=False, 
+                #                       save_as_one_file=(not args.save_each_channel_in_onefile))
 
                 # Save the intermediate signals. 
                 for dt in interm.values():

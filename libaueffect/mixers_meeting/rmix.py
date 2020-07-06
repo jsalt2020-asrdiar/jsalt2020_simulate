@@ -55,9 +55,13 @@ class ReverbMixMeeting(object):
         target_len = np.amax([dt.shape[0] + offset for dt, offset in zip(inputs, offsets)])
         s = np.zeros((nspkrs, target_len))  # anechoic signals
 
+        utt_gain = {}
+        i = 0
         for x, offset, spkr in zip(inputs, offsets, speaker_labels):
             # Randomly change the source amplitude. 
             gain = np.random.uniform(self._gain_range[0], self._gain_range[1])
+            utt_gain[f'{i}_{spkr}'] = gain
+            i += 1
             gain = 10**(gain / 20)
             s[spkr2idx[spkr], offset : offset + x.shape[0]] += x * gain
 
@@ -67,7 +71,8 @@ class ReverbMixMeeting(object):
             spkr_idx = spkr2idx[spkr]
             h = rir[spkr_idx]
             for j in range(nchans):
-                u[spkr_idx, j] = scipy.signal.lfilter(h[j], 1, s[spkr_idx])
+                # u[spkr_idx, j] = scipy.signal.lfilter(h[j], 1, s[spkr_idx])
+                u[spkr_idx, j] = scipy.signal.fftconvolve(s[spkr_idx], h[j], mode='same')
 
         y = np.sum(u, axis=0)
 
@@ -94,6 +99,7 @@ class ReverbMixMeeting(object):
         params = [('mixer', self.__class__.__name__),
                   ('implementation', __name__)]
         params += rir_info
+        params.append( ('utt_gain', utt_gain) )
         if self._noise_generator is not None:
             params.append( ('snr', snr) )
 
@@ -106,6 +112,14 @@ class ReverbMixMeeting(object):
                 for spkr in spkrs:
                     name = f'{wanted}{spkr}'
                     data[name] = u[spkr2idx[spkr]]
+                interm[wanted] = data
+            elif wanted == 'segment_image':
+                data = {}
+                i = 0
+                for x, offset, spkr in zip(inputs, offsets, speaker_labels):
+                    name = f'{wanted}_{i}_{spkr}'
+                    i+=1
+                    data[name] = u[spkr2idx[spkr], :, offset : offset + x.shape[0]]
                 interm[wanted] = data
 
             elif wanted == 'noise':
