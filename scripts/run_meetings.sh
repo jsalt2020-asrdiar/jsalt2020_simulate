@@ -142,7 +142,7 @@ python $gen_filelist --srcdir $srcdir --outlist $datalist
 if [ -v mini ] && [ ${set}=="train" ]; then
     echo "Using mini training set"
     mv ${datalist} ${datalist}.full
-    sort ${datalist}.full | tail --line=5000 > ${datalist}
+    sort ${datalist}.full | tail --line=50000 > ${datalist}
 fi
 
 # Split datalist for parallel processing
