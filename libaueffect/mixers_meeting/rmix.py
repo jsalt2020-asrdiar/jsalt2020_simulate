@@ -50,6 +50,7 @@ class ReverbMixMeeting(object):
         # Remove the preceding delay. 
         rir = libaueffect.remove_delay_from_rirs(rir)
         nchans = rir[0].shape[0]
+        rir_len = rir[0].shape[1]
 
         # Time-shift and concatenate the utterances of each speaker. 
         target_len = np.amax([dt.shape[0] + offset for dt, offset in zip(inputs, offsets)])
@@ -66,25 +67,25 @@ class ReverbMixMeeting(object):
             s[spkr2idx[spkr], offset : offset + x.shape[0]] += x * gain
 
         # Reverberate and mix the signals. 
-        u = np.zeros((nspkrs, nchans, target_len))  # source images
+        u = np.zeros((nspkrs, nchans, target_len + rir_len - 1))  # source images
         for spkr in spkrs:
             spkr_idx = spkr2idx[spkr]
             h = rir[spkr_idx]
             for j in range(nchans):
                 # u[spkr_idx, j] = scipy.signal.lfilter(h[j], 1, s[spkr_idx])
-                u[spkr_idx, j] = scipy.signal.fftconvolve(s[spkr_idx], h[j], mode='same')
+                u[spkr_idx, j] = scipy.signal.fftconvolve(s[spkr_idx], h[j], mode='full')
 
         y = np.sum(u, axis=0)
 
         # Generate noise. 
         if self._noise_generator is not None:
-            n = self._noise_generator(nsamples=target_len)                                                                                                                                                       
+            n = self._noise_generator(nsamples=target_len+rir_len-1)                                                                                                                                                       
             n, snr = libaueffect.signals.scale_noise_to_random_snr(n, y, self._min_snr, self._max_snr)
 
             # Add the noise and normalize the resultant signal. 
             y += n
         else:
-            n = np.zeros((nchans, target_len))
+            n = np.zeros((nchans, target_len + rir_len - 1))
 
         # Normalize the generated signal. 
         max_amplitude = np.amax(np.absolute(y))
@@ -119,7 +120,7 @@ class ReverbMixMeeting(object):
                 for x, offset, spkr in zip(inputs, offsets, speaker_labels):
                     name = f'{wanted}_{i}_{spkr}'
                     i+=1
-                    data[name] = u[spkr2idx[spkr], :, offset : offset + x.shape[0]]
+                    data[name] = u[spkr2idx[spkr], :, offset : offset + x.shape[0] + rir_len - 1 ]
                 interm[wanted] = data
 
             elif wanted == 'noise':
