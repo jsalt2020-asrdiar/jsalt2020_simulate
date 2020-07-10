@@ -28,7 +28,8 @@
       "opts": {
         "sound_velocity": 340,
         "fs": 16000,
-        "micarray": "mono"
+        "micarray": "mono", 
+        "noise_points": 8
       }
     }
   ],

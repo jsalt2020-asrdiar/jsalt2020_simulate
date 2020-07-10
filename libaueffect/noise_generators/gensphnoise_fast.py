@@ -6,7 +6,7 @@ import scipy.interpolate as interp
 
 
 class SphericalNoiseGenerator(object):
-    def __init__(self, sound_velocity=340, fs=16000, micarray='circular7'):
+    def __init__(self, sound_velocity=340, fs=16000, micarray='circular7', noise_points=64):
 
         self._sound_velocity = libaueffect.checked_cast(sound_velocity, 'float')
         self._fs = libaueffect.checked_cast(fs, 'int')
@@ -24,7 +24,7 @@ class SphericalNoiseGenerator(object):
         if self._nmics == 1:
             self._npoints = 1
         else:
-            self._npoints = 64
+            self._npoints = noise_points
 
         # This is the sampled locations. 
         self._loc_xyz = libaueffect.noise_generators.functions.sample_sphere(self._npoints)
@@ -36,6 +36,7 @@ class SphericalNoiseGenerator(object):
         print('Sound velocity: {}'.format(self._sound_velocity))
         print('Sampling frequency: {}'.format(self._fs))
         print('Mic array geometry: {}'.format(micarray))
+        print('Number of noise source points: {}'.format(self._npoints))
         print('', flush=True)
 
         self._tau = np.zeros((self._npoints, self._nmics))
