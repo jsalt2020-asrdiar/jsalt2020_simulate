@@ -49,12 +49,10 @@ def read_wav(path):
     return y[0], fs   # returning the first channel signal
 
 
-
-source_files = ['0000_source7127.wav', '0000_source8230.wav']
-rir_files = ['0000_rir7127__0.wav', '0000_rir8230__0.wav']
-noise_file = '0000_noise__0.wav'
-noisy_file = '0000__0.wav'  # reference
-# image_files = ['0000_image7127__0.wav', '0000_image8230__0.wav']
+source_files = ['000_source260.wav', '000_source2961.wav', '000_source4077.wav', '000_source4446.wav', '000_source6829.wav', '000_source7127.wav', '000_source8230.wav']
+rir_files = ['000_rir260__0.wav', '000_rir2961__0.wav', '000_rir4077__0.wav', '000_rir4446__0.wav', '000_rir6829__0.wav', '000_rir7127__0.wav', '000_rir8230__0.wav']
+noise_file = '000_noise__0.wav'
+noisy_file = '000__0.wav'  # reference
 
 # Any wav file loader may be used here. 
 x = []
@@ -63,12 +61,6 @@ for source_file, rir_file in zip(source_files, rir_files):
     h, _ = read_wav(rir_file)
     x.append(scipy.signal.lfilter(h, 1, s))
 x = np.sum(np.stack(x), axis=0)
-
-# x = []
-# for image_file in image_files:
-#     s, _ = read_wav(image_file)
-#     x.append(s)
-# x = np.sum(np.stack(x), axis=0)
 
 n, _ = read_wav(noise_file)
 x += n
