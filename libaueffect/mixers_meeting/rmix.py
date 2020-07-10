@@ -51,23 +51,41 @@ class ReverbMixMeeting(object):
         rir = libaueffect.remove_delay_from_rirs(rir)
         nchans = rir[0].shape[0]
 
-        # Time-shift and concatenate the utterances of each speaker. 
-        target_len = np.amax([dt.shape[0] + offset for dt, offset in zip(inputs, offsets)])
-        s = np.zeros((nspkrs, target_len))  # anechoic signals
+        # Reverberate each segment. 
+        z = []
+        for x, spkr in zip(inputs, speaker_labels):
+            h = rir[ spkr2idx[spkr] ]            
+            z.append( np.stack([scipy.signal.lfilter(h[j], 1, x) for j in range(nchans)]) )
 
-        for x, offset, spkr in zip(inputs, offsets, speaker_labels):
-            # Randomly change the source amplitude. 
+        # Generate the mixture signals. 
+        target_len = np.amax([dt.shape[1] + offset for dt, offset in zip(z, offsets)])
+
+        s = np.zeros((nspkrs, target_len))  # anechoic signals
+        u = np.zeros((nspkrs, nchans, target_len))  # source images
+
+        for dt, x, offset, spkr in zip(z, inputs, offsets, speaker_labels):
             gain = np.random.uniform(self._gain_range[0], self._gain_range[1])
             gain = 10**(gain / 20)
             s[spkr2idx[spkr], offset : offset + x.shape[0]] += x * gain
+            u[spkr2idx[spkr], :, offset : offset + dt.shape[1]] += gain * dt
 
-        # Reverberate and mix the signals. 
-        u = np.zeros((nspkrs, nchans, target_len))  # source images
-        for spkr in spkrs:
-            spkr_idx = spkr2idx[spkr]
-            h = rir[spkr_idx]
-            for j in range(nchans):
-                u[spkr_idx, j] = scipy.signal.lfilter(h[j], 1, s[spkr_idx])
+        # # Time-shift and concatenate the utterances of each speaker. 
+        # target_len = np.amax([dt.shape[1] + offset for dt, offset in zip(z, offsets)])
+        # u = np.zeros((nspkrs, target_len))
+
+        # for x, offset, spkr in zip(inputs, offsets, speaker_labels):
+        #     # Randomly change the source amplitude. 
+        #     gain = np.random.uniform(self._gain_range[0], self._gain_range[1])
+        #     gain = 10**(gain / 20)
+        #     s[spkr2idx[spkr], offset : offset + x.shape[0]] += x * gain
+
+        # # Reverberate and mix the signals. 
+        # u = np.zeros((nspkrs, nchans, target_len))  # source images
+        # for spkr in spkrs:
+        #     spkr_idx = spkr2idx[spkr]
+        #     h = rir[spkr_idx]
+        #     for j in range(nchans):
+        #         u[spkr_idx, j] = scipy.signal.lfilter(h[j], 1, s[spkr_idx])
 
         y = np.sum(u, axis=0)
 
@@ -98,7 +116,6 @@ class ReverbMixMeeting(object):
             params.append( ('snr', snr) )
 
         # intermediate signals
-        print(to_return)      
         interm = {}
         for wanted in to_return:
             if wanted == 'image':
@@ -125,6 +142,5 @@ class ReverbMixMeeting(object):
                     name = f'{wanted}{spkr}'
                     data[name] = s[spkr2idx[spkr]]
                 interm[wanted] = data
-        print(interm)
 
         return y, OrderedDict(params), interm

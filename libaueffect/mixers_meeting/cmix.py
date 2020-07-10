@@ -23,7 +23,7 @@ class CleanMixMeeting(object):
         pass
 
 
-    def __call__(self, inputs, offsets, speaker_labels):
+    def __call__(self, inputs, offsets, speaker_labels, to_return=()):
         ylen = np.amax([len(dt) + offset for dt, offset in zip(inputs, offsets)])
 
         y = np.zeros(ylen)
@@ -36,4 +36,4 @@ class CleanMixMeeting(object):
         params = [('mixer', self.__class__.__name__),
                   ('implementation', __name__)]
 
-        return y, OrderedDict(params)
+        return y, OrderedDict(params), {}
