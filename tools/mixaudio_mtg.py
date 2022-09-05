@@ -79,7 +79,9 @@ def main(args):
                         libaueffect.write_wav(dt[key], 
                                               filename, 
                                               avoid_clipping=False, 
-                                              save_as_one_file=(not args.save_each_channel_in_onefile))
+                                              save_as_one_file=(not args.save_each_channel_in_onefile),
+                                              quantize=False if key.startswith('rir') else True,
+                                              )
 
                 input_info = [{'path': os.path.abspath(f['path']), 
                                'speaker_id': f['speaker_id'], 
