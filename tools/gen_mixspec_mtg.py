@@ -159,6 +159,7 @@ def give_timing(sess, overlap_time_ratio=0.3, sil_prob=0.2, sil_dur=[0.3, 2.0], 
         offset -= ot
         actual_overlap_time += max(ot, 0)
         utt['offset'] = offset
+        utt['offset_in_samples'] = int(offset * utt['sampling_rate'])
         offset += utt['length_in_seconds']
 
         last_utt_end[spkr] = offset

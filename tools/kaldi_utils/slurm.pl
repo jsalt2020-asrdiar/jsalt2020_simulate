@@ -178,11 +178,12 @@ option mem=0          # Do not add anything to qsub_opts
 option num_threads=* --cpus-per-task $0 --ntasks-per-node=1
 option num_threads=1 --cpus-per-task 1  --ntasks-per-node=1 # Do not add anything to qsub_opts
 default gpu=0
-option gpu=0 #-p shared
-option gpu=* -p gpu --gres=gpu:$0 # --time 4:0:0  # this has to be figured out
+option gpu=0 -p shared
+option gpu=* -p gpu --gres=gpu:$0 --time 4:0:0  # this has to be figured out
+EOF
+
 # note: the --max-jobs-run option is supported as a special case
 # by slurm.pl and you don't have to handle it in the config file.
-EOF
 
 # Here the configuration options specified by the user on the command line
 # (e.g. --mem 2G) are converted to options to the qsub system as defined in
@@ -414,9 +415,7 @@ if ($array_job == 0) { # not an array job
 }
 print Q "exit \$[\$ret ? 1 : 0]\n"; # avoid status 100 which grid-engine
 print Q "## submitted with:\n";       # treats specially.
-#$qsub_cmd .= " $qsub_opts --open-mode=append -e ${queue_logfile} -o ${queue_logfile} $queue_array_opt $queue_scriptfile >>$queue_logfile 2>&1";
-#$qsub_cmd .= " --nodelist=gqxx-01-101 -p 2080ti --gres=gpu:1 --open-mode=append -e ${queue_logfile} -o ${queue_logfile} $queue_array_opt $queue_scriptfile >>$queue_logfile 2>&1";
-$qsub_cmd .= " --exclude=cqxx-01-00[1-6],cqxx-01-01[7-8],gqxx-01-[003,011,120],gqxx-01-048,gqxx-01-119 --qos qd3 $qsub_opts --open-mode=append -e ${queue_logfile} -o ${queue_logfile} $queue_array_opt $queue_scriptfile >>$queue_logfile 2>&1";
+$qsub_cmd .= " $qsub_opts --open-mode=append -e ${queue_logfile} -o ${queue_logfile} $queue_array_opt $queue_scriptfile >>$queue_logfile 2>&1";
 print Q "# $qsub_cmd\n";
 if (!close(Q)) { # close was not successful... || die "Could not close script file $shfile";
   die "Failed to close the script file (full disk?)";
