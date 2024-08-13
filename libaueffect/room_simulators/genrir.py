@@ -1,7 +1,18 @@
 # -*- coding: utf-8 -*-
 import libaueffect
 
-import pyrirgen
+try:
+    # https://github.com/Marvin182/rir-generator
+    #    That repository does no longer exist.
+    from pyrirgen import generateRir
+except ImportError:
+    # https://github.com/boeddeker/rirgen
+    #     My fork of Marvin182/rir-generator changed to be a package, i.e. added setup.py and so on.
+    from rirgen.pyrirgen import generate_rir
+
+    def generateRir(L, s, R, soundVelocity, fs, reverbTime, nSamples):
+        return generate_rir(L, s, R, sound_velocity=soundVelocity, fs=fs, reverb_time=reverbTime, n_samples=nSamples)
+
 
 import numpy as np
 import math
@@ -188,7 +199,7 @@ class RandomRirGenerator(object):
             dist_3d = np.linalg.norm(s - r)
             height = s[2] - r[2]
             
-            h0 = np.array(pyrirgen.generateRir(L, s, R, soundVelocity=self._sound_velocity, fs=self._fs, reverbTime=rt, nSamples=rirlen))
+            h0 = np.array(generateRir(L, s, R, soundVelocity=self._sound_velocity, fs=self._fs, reverbTime=rt, nSamples=rirlen))
 
             #import matplotlib.pyplot as plt
             #plt.figure()

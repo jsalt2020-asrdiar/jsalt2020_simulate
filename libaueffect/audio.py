@@ -217,7 +217,7 @@ def append_wav(x, path):
 
 
 
-def write_wav(x, path, sample_rate=16000, avoid_clipping=False, save_as_one_file=True):
+def write_wav(x, path, sample_rate=16000, avoid_clipping=False, save_as_one_file=True, quantize=True):
     x = copy.deepcopy(x)
 
     if avoid_clipping:
@@ -225,7 +225,8 @@ def write_wav(x, path, sample_rate=16000, avoid_clipping=False, save_as_one_file
         if m > np.iinfo(np.int16).max / np.abs(np.iinfo(np.int16).min):
             x /= ( m * np.abs(np.iinfo(np.int16).min) / np.iinfo(np.int16).max )
 
-    x = quantize_wav(x)
+    if quantize:
+        x = quantize_wav(x)
     if x.ndim > 1:
         x = x.T
 

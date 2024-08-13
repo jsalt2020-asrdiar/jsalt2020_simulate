@@ -2,7 +2,7 @@
 
 import libaueffect
 
-import pyrirgen
+# import pyrirgen
 
 import numpy as np
 import math

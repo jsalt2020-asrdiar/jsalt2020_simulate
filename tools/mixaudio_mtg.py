@@ -42,7 +42,7 @@ def main(args):
                 print('[{}/{} ({:.3f}%)]'.format(i+1, len(iolist), i / len(iolist)))
 
                 infiles = [os.path.abspath(f['path']) for f in iofiles['inputs']]
-                offsets = [int(args.sample_rate * f['offset']) for f in iofiles['inputs']]
+                offsets = [f['offset_in_samples'] for f in iofiles['inputs']]
                 spkr_labs = [f['speaker_id'] for f in iofiles['inputs']]
                 outfile = os.path.abspath(iofiles['output'])
 
@@ -79,11 +79,14 @@ def main(args):
                         libaueffect.write_wav(dt[key], 
                                               filename, 
                                               avoid_clipping=False, 
-                                              save_as_one_file=(not args.save_each_channel_in_onefile))
+                                              save_as_one_file=(not args.save_each_channel_in_onefile),
+                                              quantize=False if key.startswith('rir') else True,
+                                              )
 
                 input_info = [{'path': os.path.abspath(f['path']), 
                                'speaker_id': f['speaker_id'], 
-                               'offset': f['offset'], 
+                               'offset': f['offset'],
+                               'offset_in_samples': f['offset_in_samples'],
                                'length_in_seconds': f['length_in_seconds']} for f in iofiles['inputs']]
                 params = OrderedDict([('output', outfile), ('inputs', input_info)] + list(p.items()))
                 json.dump(params, log_stream, indent=4)
